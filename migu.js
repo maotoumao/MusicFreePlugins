@@ -148,7 +148,9 @@ function migu(packages) {
 
   return {
     platform: '咪咕',
+    version: '0.0.0',
     primaryKey: ['id', 'copyrightId'],
+    cacheControl: 'no-store',
     async getMediaSource(musicItem) {
       return {
         url: musicItem.url

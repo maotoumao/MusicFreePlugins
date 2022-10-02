@@ -228,6 +228,7 @@ function bilibili(packages) {
     return {
         platform: "bilibili",
         appVersion: ">=0.0",
+        version: '0.0.0',
         defaultSearchType: 'album',
         primaryKey: ['id', 'aid', 'bvid', 'cid'],
         async search(keyword, page, type) {

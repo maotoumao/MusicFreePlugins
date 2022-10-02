@@ -25,6 +25,7 @@ function qmkg(packages) {
 
     return {
         platform: '全民K歌',
+        version: '0.0.0',
         async getMediaSource(musicItem) {
             if (musicItem.shareid) {
                 const newItem = await parseMusicItemFromUrl(`https://kg.qq.com/node/play?s=${musicItem.shareid}`);

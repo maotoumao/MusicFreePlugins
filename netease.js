@@ -95,7 +95,7 @@ function netease(packages) {
 
     return {
         platform: '网易云',
-        version: '1.0.0',
+        version: '0.0.0',
         cacheControl: 'no-store',
         async search(query, page, type) {
             if (type === 'music') {
