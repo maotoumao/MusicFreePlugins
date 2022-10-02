@@ -151,6 +151,7 @@ function migu(packages) {
     version: '0.0.0',
     primaryKey: ['id', 'copyrightId'],
     cacheControl: 'no-store',
+    srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/migu.js',
     async getMediaSource(musicItem) {
       return {
         url: musicItem.url

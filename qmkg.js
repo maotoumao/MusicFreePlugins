@@ -26,6 +26,7 @@ function qmkg(packages) {
     return {
         platform: '全民K歌',
         version: '0.0.0',
+        srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qmkg.js',
         async getMediaSource(musicItem) {
             if (musicItem.shareid) {
                 const newItem = await parseMusicItemFromUrl(`https://kg.qq.com/node/play?s=${musicItem.shareid}`);
