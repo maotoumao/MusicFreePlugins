@@ -140,6 +140,30 @@ function netease(packages) {
 
     }
 
+    async function getLyric(musicItem) {
+        const headers = {
+            'Referer': 'https://y.music.163.com/',
+            'Origin': 'https://y.music.163.com/',
+            'authority': 'music.163.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        };
+        const data = { id: musicItem.id, lv: -1, tv: -1, csrf_token: '' }
+        const pae = getParamsAndEnc(JSON.stringify(data));
+        const paeData = qs.stringify(pae);
+
+        const result = (await axios({
+            method: 'post',
+            url: `https://interface.music.163.com/weapi/song/lyric?csrf_token=`,
+            headers,
+            data: paeData
+        })).data;
+    
+        return {
+          rawLrc: result.lrc.lyric
+        }
+      }
+
     async function getAlbumInfo(albumItem) {
         const headers = {
             'Referer': 'https://y.music.163.com/',
@@ -195,7 +219,8 @@ function netease(packages) {
                 url: `https://music.163.com/song/media/outer/url?id=${musicItem.id}.mp3`
             };
         },
-        getAlbumInfo
+        getAlbumInfo,
+        getLyric
 
     }
 }
