@@ -27,17 +27,16 @@ function qmkg(packages) {
         platform: '全民K歌',
         version: '0.0.0',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qmkg.js',
+        cacheControl: 'no-store',
         async getMediaSource(musicItem) {
             if (musicItem.shareid) {
                 const newItem = await parseMusicItemFromUrl(`https://kg.qq.com/node/play?s=${musicItem.shareid}`);
                 return {
-                    url: newItem.url,
-                    cacheControl: 'no-store'
+                    url: newItem.url,   
                 }
             }
             return {
                 url: musicItem.url,
-                cacheControl: 'no-store'
             }
         },
         async importMusicItem(shareUrl) {

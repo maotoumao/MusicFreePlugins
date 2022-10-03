@@ -230,6 +230,7 @@ function bilibili(packages) {
         appVersion: ">=0.0",
         version: '0.0.0',
         defaultSearchType: 'album',
+        cacheControl: 'no-cache',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/bilibili.js',
         primaryKey: ['id', 'aid', 'bvid', 'cid'],
         async search(keyword, page, type) {
@@ -287,7 +288,6 @@ function bilibili(packages) {
             return {
                 url: url,
                 headers: _headers,
-                cacheControl: 'no-cache'
             };
         },
 
