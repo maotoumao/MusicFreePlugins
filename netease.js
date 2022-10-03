@@ -1,5 +1,5 @@
 function netease(packages) {
-    const { axios, CryptoJs, qs, bigInt } = packages;
+    const { axios, CryptoJs, qs, bigInt, dayjs } = packages;
 
     /** 内部的函数 */
 
@@ -46,12 +46,14 @@ function netease(packages) {
         }
     }
 
-    async function searchMusic(query, page) {
+    const pageSize = 30;
+    async function searchBase(query, page, type) {
+
         const data = {
             's': query,
-            'limit': 30,
-            'type': 1,
-            'offset': 0,
+            'limit': pageSize,
+            'type': type,
+            'offset': (page - 1) * pageSize,
             'csrf_token': ''
         }
         const pae = getParamsAndEnc(JSON.stringify(data));
@@ -76,7 +78,14 @@ function netease(packages) {
             url: 'https://music.163.com/weapi/cloudsearch/get/web?csrf_token=',
             headers,
             data: paeData
-        })).data
+        })).data;
+
+        return res;
+    }
+
+    async function searchMusic(query, page) {
+
+        const res = await searchBase(query, page, 1);
 
         const songs = res.result.songs.filter(_ => ((_.fee === 0) || _.fee === 8) && _.privilege.st >= 0).map(_ => ({
             id: _.id,
@@ -87,11 +96,83 @@ function netease(packages) {
         }))
 
         return {
+            isEnd: res.result.songCount <= page * pageSize,
             data: songs
         }
 
     }
 
+    async function searchAlbum(query, page) {
+        const res = await searchBase(query, page, 10);
+
+        const albums = res.result.albums.map(_ => ({
+            id: _.id,
+            artist: _.artist.name,
+            title: _.name,
+            artwork: _.picUrl,
+            description: '',
+            date: dayjs.unix(_.publishTime / 1000).format("YYYY-MM-DD"),
+        }))
+
+        return {
+            isEnd: res.result.albumCount <= page * pageSize,
+            data: albums
+        }
+    }
+
+    async function searchArtist(query, page) {
+        const res = await searchBase(query, page, 100);
+
+        const artists = res.result.artists.map(_ => ({
+            name: _.name,
+            id: _.id,
+            avatar: _.img1v1Url,
+            worksNum: _.albumSize
+        }))
+
+        return {
+            isEnd: res.result.artistCount <= page * pageSize,
+            data: artists
+        }
+    }
+
+    async function getArtistWorks(artistItem, page, type) {
+
+    }
+
+    async function getAlbumInfo(albumItem) {
+        const headers = {
+            'Referer': 'https://y.music.163.com/',
+            'Origin': 'https://y.music.163.com/',
+            'authority': 'music.163.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        };
+        const data = { "resourceType": 3, "resourceId": albumItem.id, "limit": 15, "csrf_token": "" }
+        const pae = getParamsAndEnc(JSON.stringify(data));
+        const paeData = qs.stringify(pae);
+
+        const res = (await axios({
+            method: 'post',
+            url: `https://interface.music.163.com/weapi/v1/album/${albumItem.id}?csrf_token=`,
+            headers,
+            data: paeData
+        })).data;
+
+
+        return {
+            ...albumItem,
+            description: res.album.description,
+            musicList: (res.songs || []).filter(_ => ((_.fee === 0) || _.fee === 8) && _.privilege.st >= 0).map(_ => ({
+                id: _.id,
+                artwork: _.al.picUrl,
+                title: _.name,
+                artist: _.ar[0].name,
+                album: _.al.name
+            }))
+        }
+
+    }
 
     return {
         platform: '网易云',
@@ -102,12 +183,19 @@ function netease(packages) {
             if (type === 'music') {
                 return await searchMusic(query, page);
             }
+            if (type === 'album') {
+                return await searchAlbum(query, page);
+            }
+            if (type === 'artist') {
+                return await searchArtist(query, page);
+            }
         },
         getMediaSource(musicItem) {
             return {
                 url: `https://music.163.com/song/media/outer/url?id=${musicItem.id}.mp3`
             };
         },
+        getAlbumInfo
 
     }
 }

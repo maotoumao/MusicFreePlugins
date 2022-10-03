@@ -77,7 +77,7 @@ function migu(packages) {
     }
   }
 
-  async function queryArtistWorks(artistItem, page, type) {
+  async function getArtistWorks(artistItem, page, type) {
     if (type === 'music') {
       const headers = {
         'Accept': 'application/json, text/javascript, */*; q=0.01',
@@ -216,7 +216,7 @@ function migu(packages) {
         }))
       }
     },
-    queryArtistWorks: queryArtistWorks,
+    getArtistWorks: getArtistWorks,
     getLyric: getLyric
 
 

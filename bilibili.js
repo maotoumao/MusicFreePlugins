@@ -150,7 +150,7 @@ function bilibili(packages) {
         }
     }
 
-    async function queryArtistWorks(artistItem, page, type) {
+    async function getArtistWorks(artistItem, page, type) {
         if (type !== 'album') {
             return;
         }
@@ -319,7 +319,7 @@ function bilibili(packages) {
             };
         },
 
-        queryArtistWorks
+        getArtistWorks
     };
 
 }
