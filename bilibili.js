@@ -220,7 +220,7 @@ function bilibili(packages) {
         })
 
         return {
-            isEnd: resultData.pn * resultData.ps >= resultData.count,
+            isEnd: resultData.page.pn * resultData.page.ps >= resultData.page.count,
             data: albums
         }
 
