@@ -46,9 +46,33 @@ function netease(packages) {
         }
     }
 
+    function formatMusicItem(_){
+        return ({
+            id: _.id,
+            artwork: _.al.picUrl,
+            title: _.name,
+            artist: _.ar[0].name,
+            album: _.al.name
+        })
+    }
+
+    function formatAlbumItem(_){
+        return ({
+            id: _.id,
+            artist: _.artist.name,
+            title: _.name,
+            artwork: _.picUrl,
+            description: '',
+            date: dayjs.unix(_.publishTime / 1000).format("YYYY-MM-DD"),
+        });
+    }
+
+    function musicCanPlayFilter(_){
+        return  ((_.fee === 0) || _.fee === 8) && _.privilege.st >= 0;
+    }
+
     const pageSize = 30;
     async function searchBase(query, page, type) {
-
         const data = {
             's': query,
             'limit': pageSize,
@@ -87,13 +111,7 @@ function netease(packages) {
 
         const res = await searchBase(query, page, 1);
 
-        const songs = res.result.songs.filter(_ => ((_.fee === 0) || _.fee === 8) && _.privilege.st >= 0).map(_ => ({
-            id: _.id,
-            artwork: _.al.picUrl,
-            title: _.name,
-            artist: _.ar[0].name,
-            album: _.al.name
-        }))
+        const songs = res.result.songs.filter(musicCanPlayFilter).map(formatMusicItem)
 
         return {
             isEnd: res.result.songCount <= page * pageSize,
@@ -105,14 +123,7 @@ function netease(packages) {
     async function searchAlbum(query, page) {
         const res = await searchBase(query, page, 10);
 
-        const albums = res.result.albums.map(_ => ({
-            id: _.id,
-            artist: _.artist.name,
-            title: _.name,
-            artwork: _.picUrl,
-            description: '',
-            date: dayjs.unix(_.publishTime / 1000).format("YYYY-MM-DD"),
-        }))
+        const albums = res.result.albums.map(formatAlbumItem)
 
         return {
             isEnd: res.result.albumCount <= page * pageSize,
@@ -137,6 +148,49 @@ function netease(packages) {
     }
 
     async function getArtistWorks(artistItem, page, type) {
+        const data = {
+            'csrf_token': ''
+        }
+        const pae = getParamsAndEnc(JSON.stringify(data));
+        const paeData = qs.stringify(pae);
+
+        const headers = {
+            'authority': 'music.163.com',
+            'user-agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36',
+            'content-type': 'application/x-www-form-urlencoded',
+            'accept': '*/*',
+            'origin': 'https://music.163.com',
+            'sec-fetch-site': 'same-origin',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-dest': 'empty',
+            'referer': 'https://music.163.com/search/',
+            'accept-language': 'zh-CN,zh;q=0.9',
+        }
+
+        if(type === 'music') {
+            const res = (await axios({
+                method: 'post',
+                url: `https://music.163.com/weapi/v1/artist/${artistItem.id}?csrf_token=`,
+                headers,
+                data: paeData
+            })).data;
+            return {
+                isEnd: true,
+                data: res.hotSongs.filter(musicCanPlayFilter).map(formatMusicItem)
+            }
+        } else if(type === 'album') {
+            const res = (await axios({
+                method: 'post',
+                url: `https://music.163.com/weapi/artist/albums/${artistItem.id}?csrf_token=`,
+                headers,
+                data: paeData
+            })).data;
+            return {
+                isEnd: true,
+                data: res.hotAlbums.map(formatAlbumItem)
+            }
+        }
 
     }
 
@@ -187,13 +241,7 @@ function netease(packages) {
         return {
             ...albumItem,
             description: res.album.description,
-            musicList: (res.songs || []).filter(_ => ((_.fee === 0) || _.fee === 8) && _.privilege.st >= 0).map(_ => ({
-                id: _.id,
-                artwork: _.al.picUrl,
-                title: _.name,
-                artist: _.ar[0].name,
-                album: _.al.name
-            }))
+            musicList: (res.songs || []).filter(musicCanPlayFilter).map(formatMusicItem)
         }
 
     }
@@ -220,7 +268,8 @@ function netease(packages) {
             };
         },
         getAlbumInfo,
-        getLyric
+        getLyric,
+        getArtistWorks
 
     }
 }
