@@ -19,6 +19,10 @@
     {
       "name": "酷我",
       "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/kuwo.js"
+    },
+    {
+      "name": "千千音乐",
+      "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qianqian.js"
     }
   ]
 }
