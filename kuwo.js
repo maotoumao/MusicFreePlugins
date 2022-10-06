@@ -1,5 +1,5 @@
 function kuwo(packages) {
-    const { axios, CryptoJs, qs, he, CookieManager } = packages;
+    const { axios, he, CookieManager } = packages;
 
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const pageSize = 30;

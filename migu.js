@@ -28,15 +28,19 @@ function migu(packages) {
     return data.data;
   }
 
+  function musicCanPlayFilter(_) {
+    return _.mp3 || _.listenUrl || _.lisQq || _.lisCr;
+  }
+
   async function searchMusic(query, page) {
     const data = await searchBase(query, page, 2);
-    const musics = data.musics.filter(_ => _.mp3).map(_ => ({
+    const musics = data.musics.filter(musicCanPlayFilter).map(_ => ({
       id: _.id,
       artwork: _.cover,
       title: _.songName,
       artist: _.artist,
       album: _.albumName,
-      url: _.mp3,
+      url: musicCanPlayFilter(_),
       copyrightId: _.copyrightId,
       singerId: _.singerId,
     }))
@@ -104,13 +108,13 @@ function migu(packages) {
       })).data || {};
 
       return {
-        data: musicList.result.results.filter(_ => _.listenUrl || _.lisQq || _.lisCr).map(_ => ({
+        data: musicList.result.results.filter(musicCanPlayFilter).map(_ => ({
           id: _.songId,
           artwork: _.picM,
           title: _.songName,
           artist: (_.singerName || []).join(', '),
           album: _.albumName,
-          url: _.listenUrl || _.lisQq || _.lisCr,
+          url: musicCanPlayFilter(_),
           rawLrc: _.lyricLrc,
           copyrightId: _.copyrightId,
           singerId: _.singerId,
@@ -203,13 +207,13 @@ function migu(packages) {
       return {
         ...albumItem,
         description: albumDesc.albumIntro,
-        musicList: musicList.result.results.map(_ => ({
+        musicList: musicList.result.results.filter(musicCanPlayFilter).map(_ => ({
           id: _.songId,
           artwork: _.picM,
           title: _.songName,
           artist: (_.singerName || []).join(', '),
           album: albumItem.title,
-          url: _.listenUrl,
+          url: musicCanPlayFilter(_),
           rawLrc: _.lyricLrc,
           copyrightId: _.copyrightId,
           singerId: _.singerId,
