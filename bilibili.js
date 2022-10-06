@@ -63,13 +63,14 @@ function bilibili(packages) {
             );
         }
     }
-
+    const pageSize = 30;
     async function searchBase(keyword, page, searchType) {
         await getCookie();
         const params = {
             context: "",
             page: page,
             order: "",
+            page_size: pageSize,
             keyword: keyword,
             duration: "",
             tids_1: "",
@@ -128,7 +129,7 @@ function bilibili(packages) {
             };
         })
         return {
-            isEnd: resultData.page === resultData.pagesize,
+            isEnd: resultData.numResults <= page * pageSize,
             data: albums
         }
 
@@ -145,7 +146,7 @@ function bilibili(packages) {
             worksNum: result.videos
         }));
         return {
-            isEnd: resultData.page === resultData.pagesize,
+            isEnd: resultData.numResults <= page * pageSize,
             data: artists
         }
     }
@@ -228,7 +229,7 @@ function bilibili(packages) {
     return {
         platform: "bilibili",
         appVersion: ">=0.0",
-        version: '0.0.0',
+        version: '0.0.1',
         defaultSearchType: 'album',
         cacheControl: 'no-cache',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/bilibili.js',
