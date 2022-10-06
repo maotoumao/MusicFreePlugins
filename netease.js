@@ -248,7 +248,7 @@ function netease(packages) {
 
     return {
         platform: '网易云',
-        version: '0.0.0',
+        version: '0.0.1',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js',
         cacheControl: 'no-store',
         async search(query, page, type) {

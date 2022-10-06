@@ -1,5 +1,5 @@
 function migu(packages) {
-  const { axios } = packages;
+  const { axios, cheerio } = packages;
 
   const searchRows = 20;
 
@@ -81,6 +81,41 @@ function migu(packages) {
     }
   }
 
+  async function getArtistAlbumWorks(artistItem, page) {
+    const headers = {
+      'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+      'accept-encoding': 'gzip, deflate, br',
+      'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+      'connection': 'keep-alive',
+      'host': 'music.migu.cn',
+      'referer': 'http://music.migu.cn',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36',
+      'Cache-Control': 'max-age=0',
+    };
+    const html = (await axios.get(`https://music.migu.cn/v3/music/artist/${artistItem.id}/album?page=${page}`, {
+      headers
+    })).data;
+    const $ = cheerio.load(html);
+    const rawAlbums = $('div.artist-album-list').find('li');
+    const albums = [];
+    for(let i = 0; i < rawAlbums.length; ++i) {
+      const al = $(rawAlbums[i]);
+      const artwork = al.find('.thumb-img').attr('data-original');
+      albums.push({
+        id: al.find('.album-play').attr('data-id'),
+        title: al.find('.album-name').text(),
+        artwork: artwork.startsWith('//') ? `https:${artwork}` : artwork,
+        date: '',
+        artist: artistItem.name
+      })
+    }
+
+    return {
+      isEnd: $('.pagination-next').hasClass('disabled'),
+      data: albums
+    }
+  }
+
   async function getArtistWorks(artistItem, page, type) {
     if (type === 'music') {
       const headers = {
@@ -120,6 +155,8 @@ function migu(packages) {
           singerId: _.singerId,
         }))
       }
+    } else if (type === 'album') {
+      return getArtistAlbumWorks(artistItem, page);
     }
   }
 
@@ -152,7 +189,7 @@ function migu(packages) {
 
   return {
     platform: '咪咕',
-    version: '0.0.0',
+    version: '0.0.1',
     primaryKey: ['id', 'copyrightId'],
     cacheControl: 'no-store',
     srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/migu.js',
