@@ -15,6 +15,10 @@
     {
       "name": "全民K歌",
       "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qmkg.js"
+    },
+    {
+      "name": "酷我",
+      "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/kuwo.js"
     }
   ]
 }
