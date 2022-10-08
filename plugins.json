@@ -23,6 +23,10 @@
     {
       "name": "千千音乐",
       "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qianqian.js"
+    },
+    {
+      "name": "5sing",
+      "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/5sing.js"
     }
   ]
 }
