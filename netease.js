@@ -246,9 +246,26 @@ function netease(packages) {
 
     }
 
+    async function importMusicSheet(urlLike) {
+        const matchResult = urlLike.match(/https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+)/);
+        const id = matchResult[1];
+        const headers = {
+            'Referer': 'https://y.music.163.com/',
+            'Origin': 'https://y.music.163.com/',
+            'authority': 'music.163.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36',
+        };
+        const sheetDetail = (await axios.get(`https://music.163.com/api/v3/playlist/detail?id=${id}&n=5000`, {
+            headers
+        })).data;
+        const validItems = sheetDetail.privileges.filter(_ => ((_.fee === 0) || _.fee === 8) && _.st >= 0).map(_ => _.id);
+        const validMusicItems = sheetDetail.playlist.tracks.filter(_ => validItems.includes(_.id)).map(formatMusicItem);
+        return validMusicItems;
+    }
+
     return {
         platform: '网易云',
-        version: '0.0.1',
+        version: '0.0.2',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js',
         cacheControl: 'no-store',
         async search(query, page, type) {
@@ -269,7 +286,8 @@ function netease(packages) {
         },
         getAlbumInfo,
         getLyric,
-        getArtistWorks
+        getArtistWorks,
+        importMusicSheet
 
     }
 }
