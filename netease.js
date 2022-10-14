@@ -46,17 +46,18 @@ function netease(packages) {
         }
     }
 
-    function formatMusicItem(_){
+    function formatMusicItem(_) {
+        const album = _.al || _.album;
         return ({
             id: _.id,
-            artwork: _.al.picUrl,
+            artwork: album.picUrl,
             title: _.name,
-            artist: _.ar[0].name,
-            album: _.al.name
+            artist: (_.ar || _.artists)[0].name,
+            album: album.name
         })
     }
 
-    function formatAlbumItem(_){
+    function formatAlbumItem(_) {
         return ({
             id: _.id,
             artist: _.artist.name,
@@ -67,8 +68,8 @@ function netease(packages) {
         });
     }
 
-    function musicCanPlayFilter(_){
-        return  ((_.fee === 0) || _.fee === 8) && _.privilege.st >= 0;
+    function musicCanPlayFilter(_) {
+        return ((_.fee === 0) || _.fee === 8) && _.privilege.st >= 0;
     }
 
     const pageSize = 30;
@@ -168,7 +169,7 @@ function netease(packages) {
             'accept-language': 'zh-CN,zh;q=0.9',
         }
 
-        if(type === 'music') {
+        if (type === 'music') {
             const res = (await axios({
                 method: 'post',
                 url: `https://music.163.com/weapi/v1/artist/${artistItem.id}?csrf_token=`,
@@ -179,7 +180,7 @@ function netease(packages) {
                 isEnd: true,
                 data: res.hotSongs.filter(musicCanPlayFilter).map(formatMusicItem)
             }
-        } else if(type === 'album') {
+        } else if (type === 'album') {
             const res = (await axios({
                 method: 'post',
                 url: `https://music.163.com/weapi/artist/albums/${artistItem.id}?csrf_token=`,
@@ -212,11 +213,11 @@ function netease(packages) {
             headers,
             data: paeData
         })).data;
-    
+
         return {
-          rawLrc: result.lrc.lyric
+            rawLrc: result.lrc.lyric
         }
-      }
+    }
 
     async function getAlbumInfo(albumItem) {
         const headers = {
@@ -258,14 +259,16 @@ function netease(packages) {
         const sheetDetail = (await axios.get(`https://music.163.com/api/v3/playlist/detail?id=${id}&n=5000`, {
             headers
         })).data;
-        const validItems = sheetDetail.privileges.filter(_ => ((_.fee === 0) || _.fee === 8) && _.st >= 0).map(_ => _.id);
-        const validMusicItems = sheetDetail.playlist.tracks.filter(_ => validItems.includes(_.id)).map(formatMusicItem);
+        const trackIds = sheetDetail.playlist.trackIds.map(_ => _.id);
+        const songDetails = (await axios.get(`https://music.163.com/api/song/detail/?id=${trackIds[0]}&ids=[${trackIds.join(',')}]`, { headers })).data;
+        const validMusicItems = songDetails.songs.filter(_ => ((_.fee === 0) || _.fee === 8)).map(formatMusicItem);
+        console.log(validMusicItems, 'mi')
         return validMusicItems;
     }
 
     return {
         platform: '网易云',
-        version: '0.0.2',
+        version: '0.0.3',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js',
         cacheControl: 'no-store',
         async search(query, page, type) {
