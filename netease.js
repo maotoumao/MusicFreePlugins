@@ -261,14 +261,13 @@ function netease(packages) {
         })).data;
         const trackIds = sheetDetail.playlist.trackIds.map(_ => _.id);
         const songDetails = (await axios.get(`https://music.163.com/api/song/detail/?id=${trackIds[0]}&ids=[${trackIds.join(',')}]`, { headers })).data;
-        const validMusicItems = songDetails.songs.filter(_ => ((_.fee === 0) || _.fee === 8)).map(formatMusicItem);
-        console.log(validMusicItems, 'mi')
+        const validMusicItems = songDetails.songs.filter(_ => ((_.fee === 0) || _.fee === 8) && _.copyrightId !== 0).map(formatMusicItem);
         return validMusicItems;
     }
 
     return {
         platform: '网易云',
-        version: '0.0.3',
+        version: '0.0.4',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js',
         cacheControl: 'no-store',
         async search(query, page, type) {
