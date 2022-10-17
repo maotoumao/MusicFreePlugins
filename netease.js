@@ -260,14 +260,34 @@ function netease(packages) {
             headers
         })).data;
         const trackIds = sheetDetail.playlist.trackIds.map(_ => _.id);
-        const songDetails = (await axios.get(`https://music.163.com/api/song/detail/?id=${trackIds[0]}&ids=[${trackIds.join(',')}]`, { headers })).data;
+        let validTrackIds = trackIds;
+
+        try {
+            const data = { csrf_token: '', ids: `[${trackIds.join(',')}]`, level: 'standard', encodeType: 'flac' }
+            const pae = getParamsAndEnc(JSON.stringify(data));
+            const urlencoded = qs.stringify(pae);
+            const res = (await axios({
+                method: 'post',
+                url: `https://music.163.com/weapi/song/enhance/player/url/v1?csrf_token=`,
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                data: urlencoded
+            })).data;
+
+            validTrackIds = res.data.filter(_ => _.url).map(_ => _.id);
+        } catch { }
+
+        const songDetails = (await axios.get(`https://music.163.com/api/song/detail/?id=${validTrackIds[0]}&ids=[${validTrackIds.join(',')}]`, { headers })).data;
         const validMusicItems = songDetails.songs.filter(_ => ((_.fee === 0) || _.fee === 8)).map(formatMusicItem);
+
         return validMusicItems;
     }
 
     return {
         platform: '网易云',
-        version: '0.0.3',
+        version: '0.0.4',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js',
         cacheControl: 'no-store',
         async search(query, page, type) {
