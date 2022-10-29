@@ -247,6 +247,36 @@ function netease(packages) {
 
     }
 
+    async function getValidMusicItems(trackIds) {
+        const headers = {
+            'Referer': 'https://y.music.163.com/',
+            'Origin': 'https://y.music.163.com/',
+            'authority': 'music.163.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        };
+        try {
+            const data = { csrf_token: '', ids: `[${trackIds.join(',')}]`, level: 'standard', encodeType: 'flac' }
+            const pae = getParamsAndEnc(JSON.stringify(data));
+            const urlencoded = qs.stringify(pae);
+            const res = (await axios({
+                method: 'post',
+                url: `https://music.163.com/weapi/song/enhance/player/url/v1?csrf_token=`,
+                headers,
+                data: urlencoded
+            })).data;
+
+            const validTrackIds = res.data.filter(_ => _.url).map(_ => _.id);
+            const songDetails = (await axios.get(`https://music.163.com/api/song/detail/?id=${validTrackIds[0]}&ids=[${validTrackIds.join(',')}]`, { headers })).data;
+            const validMusicItems = songDetails.songs.filter(_ => ((_.fee === 0) || _.fee === 8)).map(formatMusicItem);
+            return validMusicItems;
+        } catch(e) {
+            return []
+         }
+
+        
+    }
+
     async function importMusicSheet(urlLike) {
         const matchResult = urlLike.match(/https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+)/);
         const id = matchResult[1];
@@ -260,34 +290,19 @@ function netease(packages) {
             headers
         })).data;
         const trackIds = sheetDetail.playlist.trackIds.map(_ => _.id);
-        let validTrackIds = trackIds;
-
-        try {
-            const data = { csrf_token: '', ids: `[${trackIds.join(',')}]`, level: 'standard', encodeType: 'flac' }
-            const pae = getParamsAndEnc(JSON.stringify(data));
-            const urlencoded = qs.stringify(pae);
-            const res = (await axios({
-                method: 'post',
-                url: `https://music.163.com/weapi/song/enhance/player/url/v1?csrf_token=`,
-                headers: {
-                    ...headers,
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                data: urlencoded
-            })).data;
-
-            validTrackIds = res.data.filter(_ => _.url).map(_ => _.id);
-        } catch { }
-
-        const songDetails = (await axios.get(`https://music.163.com/api/song/detail/?id=${validTrackIds[0]}&ids=[${validTrackIds.join(',')}]`, { headers })).data;
-        const validMusicItems = songDetails.songs.filter(_ => ((_.fee === 0) || _.fee === 8)).map(formatMusicItem);
-
-        return validMusicItems;
+        let result = [];
+        let idx = 0;
+        while((idx * 200) < trackIds.length) {
+            const res = await getValidMusicItems(trackIds.slice(idx * 200, (idx + 1) * 200));
+            result = result.concat(res);
+            ++idx;
+        }
+        return result;
     }
 
     return {
         platform: '网易云',
-        version: '0.0.4',
+        version: '0.0.5',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js',
         cacheControl: 'no-store',
         async search(query, page, type) {
