@@ -27,6 +27,10 @@
     {
       "name": "5sing",
       "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/5sing.js"
+    },
+    {
+      "name": "酷狗",
+      "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/kugou.js"
     }
   ]
 }
