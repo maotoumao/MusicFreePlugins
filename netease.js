@@ -278,8 +278,8 @@ function netease(packages) {
     }
 
     async function importMusicSheet(urlLike) {
-        const matchResult = urlLike.match(/https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+)/);
-        const id = matchResult[1];
+        const matchResult = urlLike.match(/(?:https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+))|(?:https?:\/\/music\.163\.com\/playlist\/([0-9]+)\/.*)/);
+        const id = matchResult[1] || matchResult[2];
         const headers = {
             'Referer': 'https://y.music.163.com/',
             'Origin': 'https://y.music.163.com/',
@@ -302,7 +302,7 @@ function netease(packages) {
 
     return {
         platform: '网易云',
-        version: '0.0.5',
+        version: '0.0.6',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js',
         cacheControl: 'no-store',
         async search(query, page, type) {
