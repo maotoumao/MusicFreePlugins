@@ -31,6 +31,10 @@
     {
       "name": "酷狗",
       "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/kugou.js"
+    },
+    {
+      "name": "QQ音乐",
+      "url": "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qq.js"
     }
   ]
 }
