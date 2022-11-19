@@ -5,15 +5,15 @@ function qq(packages) {
 
     function formatMusicItem(_) {
         return {
-            id: _.id,
-            songmid: _.mid,
-            title: _.title,
+            id: _.id || _.songid,
+            songmid: _.mid || _.songmid,
+            title: _.title || _.songname,
             artist: _.singer.map(s => s.name).join(', '),
-            artwork: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${_.album.mid}.jpg`,
-            album: _.album.title,
+            artwork: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${_.albummid || _.album.mid}.jpg`,
+            album: _.albumname || _.album.title,
             lrc: _.lyric || undefined,
-            albumid: _.album.id,
-            albummid: _.album.mid,
+            albumid: _.albumid || _.album.id,
+            albummid: _.albummid || _.album.mid,
         }
     }
 
@@ -57,7 +57,7 @@ function qq(packages) {
     }
 
     const validSongFilter = (item) => {
-        return item.pay.pay_play === 0
+        return item.pay.pay_play === 0 || item.pay.payplay === 0
     }
 
     async function searchBase(query, page, type) {
@@ -358,10 +358,36 @@ function qq(packages) {
         }
     }
 
+    async function importMusicSheet(urlLike) {
+        //
+        let id;
+        if (!id) {
+            id = (urlLike.match(/https?:\/\/i\.y\.qq\.com\/n2\/m\/share\/details\/taoge\.html\?id=([0-9]+)/) || [])[1];
+        }
+        if (!id) {
+            id = (urlLike.match(/https?:\/\/y\.qq\.com\/n\/ryqq\/playlist\/([0-9]+)/) || [])[1];
+        }
+        if (!id) {
+            return;
+        }
+
+        const result = (await axios({
+            "url": `http://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&utf8=1&disstid=${id}&loginUin=0`,
+            "headers": { "Referer": "https://y.qq.com/n/yqq/playlist", "Cookie": "uin=" },
+            "method": "get",
+            "xsrfCookieName": "XSRF-TOKEN",
+            "withCredentials": true
+        }
+        )).data;
+        const res = JSON.parse(result.replace(/callback\(|MusicJsonCallback\(|jsonCallback\(|\)$/g, ''))
+        console.log(res);
+        return res.cdlist[0].songlist.filter(validSongFilter).map(formatMusicItem);
+    }
+
     // 接口参考：https://jsososo.github.io/QQMusicApi/#/
     return {
         platform: 'QQ音乐',
-        version: '0.0.0',
+        version: '0.0.1',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qq.js',
         cacheControl: 'no-cache',
         async search(query, page, type) {
@@ -394,6 +420,7 @@ function qq(packages) {
         },
         getLyric,
         getAlbumInfo,
-        getArtistWorks
+        getArtistWorks,
+        importMusicSheet
     }
 }
