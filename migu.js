@@ -252,7 +252,7 @@ function migu(packages) {
 
   return {
     platform: '咪咕',
-    version: '0.0.1',
+    version: '0.0.2',
     primaryKey: ['id', 'copyrightId'],
     cacheControl: 'no-store',
     srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/migu.js',
