@@ -4,16 +4,19 @@ function qq(packages) {
     const pageSize = 20;
 
     function formatMusicItem(_) {
+        const albumid = _.albumid || (_.album || {}).id;
+        const albummid = _.albummid || (_.album || {}).mid;
+        const albumname = _.albumname || (_.album || {}).title;
         return {
             id: _.id || _.songid,
             songmid: _.mid || _.songmid,
             title: _.title || _.songname,
             artist: _.singer.map(s => s.name).join(', '),
-            artwork: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${_.albummid || _.album.mid}.jpg`,
-            album: _.albumname || _.album.title,
+            artwork: albummid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albummid}.jpg` : undefined,
+            album: albumname,
             lrc: _.lyric || undefined,
-            albumid: _.albumid || _.album.id,
-            albummid: _.albummid || _.album.mid,
+            albumid: albumid,
+            albummid: albummid,
         }
     }
 
@@ -387,7 +390,7 @@ function qq(packages) {
     // 接口参考：https://jsososo.github.io/QQMusicApi/#/
     return {
         platform: 'QQ音乐',
-        version: '0.0.1',
+        version: '0.0.2',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qq.js',
         cacheControl: 'no-cache',
         async search(query, page, type) {
