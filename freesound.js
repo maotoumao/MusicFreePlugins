@@ -36,7 +36,7 @@ function freesound(packages) {
                     artist,
                     artwork,
                     album,
-                    url
+                    yourName: url
                 })
             });
             // 总页码
@@ -51,11 +51,18 @@ function freesound(packages) {
         }
     }
 
+    function getMediaSource(musicItem) {
+        return {
+            url: musicItem.yourName
+        }
+    }
+
     return {
         platform: 'FreeSound', // 插件名
         version: '0.0.0', // 版本号
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/freesound.js', // 更新链接；当在app更新插件后会自动用此地址的插件覆盖
         cacheControl: 'no-store', // 我们可以直接解析出musicItem的结构，因此选取no-store就好了，当然也可以不写这个字段
-        search // 在这里写上search方法，此时插件就会出现在搜索结果页了，尽管到这一步搜索结果是空的
+        search, // 在这里写上search方法，此时插件就会出现在搜索结果页了
+        getMediaSource, // 由于搜索结果中没有了url字段，需要指定如何获取音源
     }
 }
