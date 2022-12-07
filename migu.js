@@ -252,18 +252,26 @@ function migu(packages) {
 
   return {
     platform: '咪咕',
-    version: '0.0.2',
+    version: '0.0.3',
     primaryKey: ['id', 'copyrightId'],
     cacheControl: 'no-store',
     srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/migu.js',
-    async getMediaSource(musicItem) { 
-      if(musicItem.url) {
+    async getMediaSource(musicItem, quality) { 
+      if(quality === 'standard' && musicItem.url) {
         return {
           url: musicItem.url
         }
       };
+      let toneFlag = 'HQ';
+      if(quality === 'super') {
+        toneFlag = 'ZQ';
+      } else if(quality === 'high') {
+        toneFlag = 'SQ';
+      } else if(quality === 'low') {
+        toneFlag = 'PQ';
+      }
       const resource = (await axios({
-        url: `https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${musicItem.copyrightId}&toneFlag=HQ`,
+        url: `https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${musicItem.copyrightId}&toneFlag=${toneFlag}`,
         headers: {
           referer: 'http://m.music.migu.cn/v3',
           uid: 123,

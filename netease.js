@@ -53,7 +53,22 @@ function netease(packages) {
             artwork: album.picUrl,
             title: _.name,
             artist: (_.ar || _.artists)[0].name,
-            album: album.name
+            album: album.name,
+            url: `https://music.163.com/song/media/outer/url?id=${_.id}.mp3`,
+            qualities: {
+                low: {
+                    size: (_.l || {}).size
+                },
+                standard: {
+                    size: (_.m || {}).size
+                },
+                high: {
+                    size: (_.h || {}).size
+                },
+                super: {
+                    size: (_.sq || {}).size
+                },
+            }
         })
     }
 
@@ -316,7 +331,7 @@ function netease(packages) {
                 return await searchArtist(query, page);
             }
         },
-        getMediaSource(musicItem) {
+        getMediaSource(musicItem, quality) {
             return {
                 url: `https://music.163.com/song/media/outer/url?id=${musicItem.id}.mp3`
             };
