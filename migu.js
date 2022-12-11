@@ -253,6 +253,7 @@ function migu(packages) {
   return {
     platform: '咪咕',
     version: '0.0.3',
+    appVersion: ">0.0.1-alpha.10",
     primaryKey: ['id', 'copyrightId'],
     cacheControl: 'no-store',
     srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/migu.js',
