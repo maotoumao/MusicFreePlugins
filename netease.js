@@ -1,5 +1,5 @@
 function netease(packages) {
-    const { axios, CryptoJs, qs, bigInt, dayjs } = packages;
+    const { axios, CryptoJs, qs, bigInt, dayjs, cheerio } = packages;
 
     /** 内部的函数 */
 
@@ -210,6 +210,15 @@ function netease(packages) {
 
     }
 
+
+    async function getTopListDetail(topListItem) {
+        const musicList = await getSheetMusicById(topListItem.id);
+        return {
+            ...topListItem,
+            musicList
+        }
+    }
+
     async function getLyric(musicItem) {
         const headers = {
             'Referer': 'https://y.music.163.com/',
@@ -285,16 +294,15 @@ function netease(packages) {
             const songDetails = (await axios.get(`https://music.163.com/api/song/detail/?id=${validTrackIds[0]}&ids=[${validTrackIds.join(',')}]`, { headers })).data;
             const validMusicItems = songDetails.songs.filter(_ => ((_.fee === 0) || _.fee === 8)).map(formatMusicItem);
             return validMusicItems;
-        } catch(e) {
+        } catch (e) {
             return []
-         }
+        }
 
-        
+
     }
 
-    async function importMusicSheet(urlLike) {
-        const matchResult = urlLike.match(/(?:https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+))|(?:https?:\/\/music\.163\.com\/playlist\/([0-9]+)\/.*)/);
-        const id = matchResult[1] || matchResult[2];
+
+    async function getSheetMusicById(id) {
         const headers = {
             'Referer': 'https://y.music.163.com/',
             'Origin': 'https://y.music.163.com/',
@@ -307,7 +315,7 @@ function netease(packages) {
         const trackIds = sheetDetail.playlist.trackIds.map(_ => _.id);
         let result = [];
         let idx = 0;
-        while((idx * 200) < trackIds.length) {
+        while ((idx * 200) < trackIds.length) {
             const res = await getValidMusicItems(trackIds.slice(idx * 200, (idx + 1) * 200));
             result = result.concat(res);
             ++idx;
@@ -315,9 +323,61 @@ function netease(packages) {
         return result;
     }
 
+    async function importMusicSheet(urlLike) {
+        const matchResult = urlLike.match(/(?:https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+))|(?:https?:\/\/music\.163\.com\/playlist\/([0-9]+)\/.*)/);
+        const id = matchResult[1] || matchResult[2];
+        return getSheetMusicById(id);
+    }
+
+
+    async function getTopLists() {
+        const res = await axios.get('https://music.163.com/discover/toplist', {
+            headers: {
+                referer: 'https://music.163.com/',
+                'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54"
+            }
+        });
+        const $ = cheerio.load(res.data);
+        const children = $('.n-minelst').children();
+        const groups = [];
+        let currentGroup = {};
+        for (let c of children) {
+            if (c.tagName == 'h2') {
+                if (currentGroup.title) {
+                    groups.push(currentGroup);
+                }
+                currentGroup = {};
+                currentGroup.title = $(c).text();
+                currentGroup.data = [];
+            } else if (c.tagName === 'ul') {
+                let sections = $(c).children();
+                currentGroup.data = sections.map((index, element) => {
+                    const ele = $(element);
+                    const id = ele.attr('data-res-id');
+                    const coverImg = ele.find('img').attr('src');
+                    const title = ele.find('p.name').text();
+                    const description = ele.find('p.s-fc4').text();
+
+                    return {
+                        id,
+                        coverImg,
+                        title,
+                        description
+                    }
+                }).toArray()
+            }
+        }
+        if (currentGroup.title) {
+            groups.push(currentGroup);
+        }
+
+        return groups;
+
+    }
+
     return {
         platform: '网易云',
-        version: '0.0.6',
+        version: '0.0.7',
         srcUrl: 'https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js',
         cacheControl: 'no-store',
         async search(query, page, type) {
@@ -339,7 +399,8 @@ function netease(packages) {
         getAlbumInfo,
         getLyric,
         getArtistWorks,
-        importMusicSheet
-
+        importMusicSheet,
+        getTopLists,
+        getTopListDetail
     }
 }
