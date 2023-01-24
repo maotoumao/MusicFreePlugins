@@ -447,7 +447,7 @@ async function getMediaSource(musicItem: IMusic.IMusicItem, quality: IMusic.IQua
 module.exports = {
   platform: "网易云",
   version: "0.1.0",
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js",
+  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
   cacheControl: "no-store",
   async search(query, page, type) {
     if (type === "music") {

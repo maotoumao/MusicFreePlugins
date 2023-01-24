@@ -88,7 +88,7 @@ function formatMedia(result) {
         aid: result.aid,
         bvid: result.bvid,
         artist: (_c = result.author) !== null && _c !== void 0 ? _c : (_d = result.owner) === null || _d === void 0 ? void 0 : _d.name,
-        title: he.decode((_f = (_e = result.title) === null || _e === void 0 ? void 0 : _e.replace(/(\<em(.*?)\>)|(\<\/em\>)/g, "")) !== null && _f !== void 0 ? _f : ''),
+        title: he.decode((_f = (_e = result.title) === null || _e === void 0 ? void 0 : _e.replace(/(\<em(.*?)\>)|(\<\/em\>)/g, "")) !== null && _f !== void 0 ? _f : ""),
         album: (_g = result.bvid) !== null && _g !== void 0 ? _g : result.aid,
         artwork: ((_h = result.pic) === null || _h === void 0 ? void 0 : _h.startsWith("//"))
             ? "http:".concat(result.pic)
@@ -329,10 +329,10 @@ async function getTopListDetail(topListItem) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.0.1",
+    version: "0.1.0",
     defaultSearchType: "album",
     cacheControl: "no-cache",
-    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/bilibili.js",
+    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
     primaryKey: ["id", "aid", "bvid", "cid"],
     async search(keyword, page, type) {
         if (type === "album" || type === "music") {

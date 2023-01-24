@@ -351,7 +351,7 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
 module.exports = {
   platform: "5sing",
   version: "0.1.0",
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/5sing.js",
+  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/5sing/index.js",
   cacheControl: "no-cache",
   async search(query, page, type) {
     if (type === "music") {

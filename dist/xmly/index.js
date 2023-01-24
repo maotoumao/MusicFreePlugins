@@ -156,8 +156,8 @@ async function getArtistWorks(artistItem, page, type) {
 }
 module.exports = {
     platform: "喜马拉雅",
-    version: "0.0.0",
-    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/xmly.js",
+    version: "0.1.0",
+    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/xmly/index.js",
     cacheControl: "no-store",
     search,
     getAlbumInfo,

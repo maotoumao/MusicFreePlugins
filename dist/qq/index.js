@@ -385,8 +385,8 @@ async function getTopListDetail(topListItem) {
 }
 module.exports = {
     platform: "QQ音乐",
-    version: "0.0.2",
-    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qq.js",
+    version: "0.1.0",
+    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
     cacheControl: "no-cache",
     async search(query, page, type) {
         if (type === "music") {

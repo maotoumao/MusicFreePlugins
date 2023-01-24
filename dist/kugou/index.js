@@ -60,13 +60,14 @@ async function searchAlbum(query, page) {
         },
     })).data;
     const albums = res.data.info.map((_) => {
-        var _a;
+        var _a, _b;
         return ({
             id: _.albumid,
             artwork: (_a = _.imgurl) === null || _a === void 0 ? void 0 : _a.replace("{size}", "400"),
             artist: _.singername,
             title: _.albumname,
             description: _.intro,
+            date: (_b = _.publishtime) === null || _b === void 0 ? void 0 : _b.slice(0, 10)
         });
     });
     return {
@@ -212,8 +213,8 @@ async function getAlbumInfo(albumItem) {
 }
 module.exports = {
     platform: "酷狗",
-    version: "0.0.0",
-    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/kugou.js",
+    version: "0.1.0",
+    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kugou/index.js",
     cacheControl: "no-cache",
     primaryKey: ["id", "album_id", "album_audio_id"],
     async search(query, page, type) {

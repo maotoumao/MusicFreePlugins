@@ -329,11 +329,11 @@ async function getTopListDetail(topListItem) {
 }
 module.exports = {
     platform: "咪咕",
-    version: "0.0.3",
+    version: "0.1.0",
     appVersion: ">0.0.1-alpha.10",
     primaryKey: ["id", "copyrightId"],
     cacheControl: "no-store",
-    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/migu.js",
+    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/migu/index.js",
     async getMediaSource(musicItem, quality) {
         if (quality === "standard" && musicItem.url) {
             return {

@@ -349,14 +349,17 @@ const qualityLevels = {
     super: 'lossless'
 };
 async function getMediaSource(musicItem, quality) {
+    if (quality !== 'standard') {
+        return;
+    }
     return {
         url: `https://music.163.com/song/media/outer/url?id=${musicItem.id}.mp3`,
     };
 }
 module.exports = {
     platform: "网易云",
-    version: "0.0.7",
-    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/netease.js",
+    version: "0.1.0",
+    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
     cacheControl: "no-store",
     async search(query, page, type) {
         if (type === "music") {

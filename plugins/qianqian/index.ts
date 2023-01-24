@@ -272,7 +272,7 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
 module.exports = {
   platform: "千千音乐",
   version: "0.1.0",
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qianqian.js",
+  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qianqian/index.js",
   cacheControl: "no-cache",
   async search(query, page, type) {
     if (type === "music") {

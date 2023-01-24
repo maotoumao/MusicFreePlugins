@@ -298,8 +298,8 @@ async function getTopListDetail(topListItem) {
 }
 module.exports = {
     platform: "5sing",
-    version: "0.0.0",
-    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/5sing.js",
+    version: "0.1.0",
+    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/5sing/index.js",
     cacheControl: "no-cache",
     async search(query, page, type) {
         if (type === "music") {

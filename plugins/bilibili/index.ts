@@ -405,7 +405,7 @@ module.exports = {
   version: "0.1.0",
   defaultSearchType: "album",
   cacheControl: "no-cache",
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/bilibili.js",
+  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
   primaryKey: ["id", "aid", "bvid", "cid"],
   async search(keyword, page, type) {
     if (type === "album" || type === "music") {

@@ -26,7 +26,7 @@ async function parseMusicItemFromUrl(shareUrl) {
 module.exports = {
   platform: "全民K歌",
   version: "0.1.0",
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qmkg.js",
+  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qmkg/index.js",
   cacheControl: "no-store",
   async getMediaSource(musicItem) {
     if (musicItem.shareid) {

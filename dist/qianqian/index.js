@@ -219,8 +219,8 @@ async function getTopListDetail(topListItem) {
 }
 module.exports = {
     platform: "千千音乐",
-    version: "0.0.0",
-    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/master/qianqian.js",
+    version: "0.1.0",
+    srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qianqian/index.js",
     cacheControl: "no-cache",
     async search(query, page, type) {
         if (type === "music") {
