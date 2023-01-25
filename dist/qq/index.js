@@ -336,6 +336,9 @@ async function importMusicSheet(urlLike) {
             [])[1];
     }
     if (!id) {
+        id = (urlLike.match(/^(\d+)$/) || [])[1];
+    }
+    if (!id) {
         return;
     }
     const result = (await (0, axios_1.default)({
@@ -373,7 +376,7 @@ async function getTopLists() {
 async function getTopListDetail(topListItem) {
     var _a;
     const res = await (0, axios_1.default)({
-        url: `https://u.y.qq.com/cgi-bin/musicu.fcg?g_tk=5381&data=%7B%22detail%22%3A%7B%22module%22%3A%22musicToplist.ToplistInfoServer%22%2C%22method%22%3A%22GetDetail%22%2C%22param%22%3A%7B%22topId%22%3A${topListItem.id}%2C%22offset%22%3A0%2C%22num%22%3A100%2C%22period%22%3A%22${(_a = topListItem.period) !== null && _a !== void 0 ? _a : ''}%22%7D%7D%2C%22comm%22%3A%7B%22ct%22%3A24%2C%22cv%22%3A0%7D%7D`,
+        url: `https://u.y.qq.com/cgi-bin/musicu.fcg?g_tk=5381&data=%7B%22detail%22%3A%7B%22module%22%3A%22musicToplist.ToplistInfoServer%22%2C%22method%22%3A%22GetDetail%22%2C%22param%22%3A%7B%22topId%22%3A${topListItem.id}%2C%22offset%22%3A0%2C%22num%22%3A100%2C%22period%22%3A%22${(_a = topListItem.period) !== null && _a !== void 0 ? _a : ""}%22%7D%7D%2C%22comm%22%3A%7B%22ct%22%3A24%2C%22cv%22%3A0%7D%7D`,
         method: "get",
         headers: {
             Cookie: "uin=",
@@ -381,13 +384,22 @@ async function getTopListDetail(topListItem) {
         xsrfCookieName: "XSRF-TOKEN",
         withCredentials: true,
     });
-    return Object.assign(Object.assign({}, topListItem), { musicList: res.data.detail.data.songInfoList.filter(validSongFilter).map(formatMusicItem) });
+    return Object.assign(Object.assign({}, topListItem), { musicList: res.data.detail.data.songInfoList
+            .filter(validSongFilter)
+            .map(formatMusicItem) });
 }
 module.exports = {
     platform: "QQ音乐",
     version: "0.1.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
     cacheControl: "no-cache",
+    hints: {
+        importMusicSheet: [
+            "QQ音乐APP：自建歌单-分享-分享到微信好友/QQ好友；然后点开并复制链接，直接粘贴即可",
+            "H5：复制URL并粘贴，或者直接输入纯数字歌单ID即可",
+            "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
+        ],
+    },
     async search(query, page, type) {
         if (type === "music") {
             return await searchMusic(query, page);
@@ -402,15 +414,15 @@ module.exports = {
     async getMediaSource(musicItem, quality) {
         let purl = "";
         let domain = "";
-        let type = '128';
-        if (quality === 'standard') {
-            type = '320';
+        let type = "128";
+        if (quality === "standard") {
+            type = "320";
         }
-        else if (quality === 'high') {
-            type = 'm4a';
+        else if (quality === "high") {
+            type = "m4a";
         }
-        else if (quality === 'super') {
-            type = 'flac';
+        else if (quality === "super") {
+            type = "flac";
         }
         const result = await getSourceUrl(musicItem.songmid, type);
         if (result.req_0 && result.req_0.data && result.req_0.data.midurlinfo) {
@@ -433,5 +445,5 @@ module.exports = {
     getArtistWorks,
     importMusicSheet,
     getTopLists,
-    getTopListDetail
+    getTopListDetail,
 };

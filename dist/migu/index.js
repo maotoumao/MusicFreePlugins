@@ -177,12 +177,31 @@ async function getLyric(musicItem) {
     };
 }
 async function importMusicSheet(urlLike) {
+    var _a, _b, _c, _d;
     let id;
     if (!id) {
-        id = (urlLike.match(/https?:\/\/music\.migu\.cn\/v3\/my\/playlist\/([0-9]+)/) || [])[1];
+        id = (urlLike.match(/https?:\/\/music\.migu\.cn\/v3\/(?:my|music)\/playlist\/([0-9]+)/) || [])[1];
     }
     if (!id) {
         id = (urlLike.match(/https?:\/\/h5\.nf\.migu\.cn\/app\/v4\/p\/share\/playlist\/index.html\?.*id=([0-9]+)/) || [])[1];
+    }
+    if (!id) {
+        id = (_a = urlLike.match(/^\s*(\d+)\s*$/)) === null || _a === void 0 ? void 0 : _a[1];
+    }
+    if (!id) {
+        const tempUrl = (_b = urlLike.match(/(https?:\/\/c\.migu\.cn\/[\S]+)/)) === null || _b === void 0 ? void 0 : _b[1];
+        if (tempUrl) {
+            const realpath = (_c = (await axios_1.default.get('http://c.migu.cn/00aLhf?ifrom=77918c9fd3d1e1817e0449985836b347', {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61',
+                    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                    host: 'c.migu.cn'
+                },
+            })).request) === null || _c === void 0 ? void 0 : _c.path;
+            if (realpath) {
+                id = (_d = realpath.match(/id=(\d+)/)) === null || _d === void 0 ? void 0 : _d[1];
+            }
+        }
     }
     if (!id) {
         return;
@@ -330,7 +349,14 @@ async function getTopListDetail(topListItem) {
 module.exports = {
     platform: "咪咕",
     version: "0.1.0",
-    appVersion: ">0.0.1-alpha.10",
+    appVersion: ">0.1.0-alpha.0",
+    hints: {
+        importMusicSheet: [
+            '咪咕APP：自建歌单-分享-复制链接，直接粘贴即可',
+            'H5/PC端：复制URL并粘贴，或者直接输入纯数字歌单ID即可',
+            '导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待'
+        ]
+    },
     primaryKey: ["id", "copyrightId"],
     cacheControl: "no-store",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/migu/index.js",

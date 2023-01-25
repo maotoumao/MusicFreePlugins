@@ -214,6 +214,7 @@ async function getAlbumInfo(albumItem) {
 module.exports = {
     platform: "酷狗",
     version: "0.1.0",
+    appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kugou/index.js",
     cacheControl: "no-cache",
     primaryKey: ["id", "album_id", "album_audio_id"],

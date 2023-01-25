@@ -359,6 +359,7 @@ async function getMediaSource(musicItem, quality) {
 module.exports = {
     platform: "网易云",
     version: "0.1.0",
+    appVersion: '>0.1.0-alpha.0',
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
     cacheControl: "no-store",
     hints: {
@@ -366,7 +367,7 @@ module.exports = {
             '网易云移动端：APP点击分享，然后复制链接',
             '网易云H5/PC端：复制URL，或者直接输入歌单ID即可',
             '默认歌单无法导入，先新建一个空白歌单复制过去再导入新歌单即可',
-            '导入过程中会过滤掉所有VIP/试听/收费音乐，请耐心等待'
+            '导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待'
         ]
     },
     async search(query, page, type) {
