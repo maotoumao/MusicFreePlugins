@@ -46,7 +46,7 @@ module.exports = {
   },
   hints: {
     importMusicItem: [
-      '全民K歌APP: -分享-复制链接，直接粘贴即可',
+      '全民K歌APP: 分享-复制链接，直接粘贴即可',
     ]
   },
 };
