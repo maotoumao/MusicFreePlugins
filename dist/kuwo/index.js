@@ -221,7 +221,7 @@ async function importMusicSheet(urlLike) {
     }
     let page = 1;
     let totalPage = 30;
-    const musicList = [];
+    let musicList = [];
     while (page < totalPage) {
         try {
             const data = await getMusicSheetResponseById(id, page, 80);
@@ -229,9 +229,9 @@ async function importMusicSheet(urlLike) {
             if (isNaN(totalPage)) {
                 totalPage = 1;
             }
-            musicList.concat(data.data.musicList
+            musicList = musicList.concat(data.data.musicList
                 .filter((_) => !_.isListenFee)
-                .map((_) => formatMusicItem));
+                .map(formatMusicItem));
         }
         catch (_c) { }
         await new Promise((resolve) => {
