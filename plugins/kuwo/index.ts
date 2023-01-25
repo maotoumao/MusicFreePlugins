@@ -315,7 +315,7 @@ module.exports = {
   cacheControl: "no-cache",
   hints: {
     importMusicSheet: [
-      '酷我APP：自建歌单-分享-复制链接，直接粘贴即可',
+      '酷我APP：自建歌单-分享-复制试听链接，直接粘贴即可',
       'H5：复制URL并粘贴，或者直接输入纯数字歌单ID即可',
       '导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待'
     ]

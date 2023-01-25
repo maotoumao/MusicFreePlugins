@@ -44,4 +44,9 @@ module.exports = {
   async importMusicItem(shareUrl) {
     return parseMusicItemFromUrl(shareUrl);
   },
+  hints: {
+    importMusicItem: [
+      '全民K歌APP: -分享-复制链接，直接粘贴即可',
+    ]
+  },
 };
