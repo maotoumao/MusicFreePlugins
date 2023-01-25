@@ -248,12 +248,78 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   };
 }
 
+///
+async function getMusicSheetResponseById(
+  id: string,
+  page: number,
+  pagesize: number = 50
+) {
+  const headers = await getHeaders();
+  return (
+    await axios.get(
+      `http://www.kuwo.cn/api/www/playlist/playListInfo?pid=${id}&pn=${page}&rn=${pagesize}&httpsStatus=1`,
+      {
+        headers,
+      }
+    )
+  ).data;
+}
+
+/// 导入歌单
+async function importMusicSheet(urlLike: string) {
+  let id;
+  if (!id) {
+    id = urlLike.match(/https?:\/\/www\/kuwo\.cn\/playlist_detail\/(\d+)/)?.[1];
+  }
+  if (!id) {
+    id = urlLike.match(/https?:\/\/m\.kuwo\.cn\/h5app\/playlist\/(\d+)/)?.[1];
+  }
+  if (!id) {
+    id = urlLike.match(/^\s*(\d+)\s*$/);
+  }
+  if (!id) {
+    return;
+  }
+  let page = 1;
+  let totalPage = 30;
+  const musicList = [];
+  while (page < totalPage) {
+    try {
+      const data = await getMusicSheetResponseById(id, page, 80);
+      totalPage = Math.ceil(data.data.total / 80);
+      if (isNaN(totalPage)) {
+        totalPage = 1;
+      }
+      musicList.concat(
+        data.data.musicList
+          .filter((_) => !_.isListenFee)
+          .map((_) => formatMusicItem)
+      );
+    } catch {}
+
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 200 + Math.random() * 100);
+    });
+    ++page;
+  }
+}
+
 module.exports = {
   platform: "酷我",
   version: "0.1.0",
-  appVersion: ">0.0.1-alpha.3",
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
+  appVersion: ">0.1.0-alpha.0",
+  srcUrl:
+    "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
   cacheControl: "no-cache",
+  hints: {
+    importMusicSheet: [
+      '酷我APP：自建歌单-分享-复制链接，直接粘贴即可',
+      'H5：复制URL并粘贴，或者直接输入纯数字歌单ID即可',
+      '导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待'
+    ]
+  },
   async search(query, page, type) {
     if (type === "music") {
       return await searchMusic(query, page);
@@ -300,4 +366,5 @@ module.exports = {
   getArtistWorks,
   getTopLists,
   getTopListDetail,
+  importMusicSheet
 };
