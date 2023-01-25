@@ -223,20 +223,29 @@ async function importMusicSheet(urlLike) {
       /https?:\/\/h5\.nf\.migu\.cn\/app\/v4\/p\/share\/playlist\/index.html\?.*id=([0-9]+)/
     ) || [])[1];
   }
-  if(!id) {
-    id = urlLike.match(/^\s*(\d+)\s*$/)?.[1]
+  if (!id) {
+    id = urlLike.match(/^\s*(\d+)\s*$/)?.[1];
   }
-  if(!id) {
-    const tempUrl = urlLike.match(/(https?:\/\/c\.migu\.cn\/[\S]+)/)?.[1];
-    if(tempUrl) {
-      const realpath = (await axios.get('http://c.migu.cn/00aLhf?ifrom=77918c9fd3d1e1817e0449985836b347', {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-          host: 'c.migu.cn'
-        },
-      })).request?.path;
-      if(realpath) {
+  if (!id) {
+    const tempUrl = urlLike.match(/(https?:\/\/c\.migu\.cn\/[\S]+)\?/)?.[1];
+    if (tempUrl) {
+      const request = (
+        await axios.get(tempUrl, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61",
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            host: "c.migu.cn",
+          },
+          validateStatus(status) {
+            return (status >= 200 && status < 300) || status === 403;
+          },
+        })
+      ).request;
+
+      const realpath = request?.path ?? request?.responseURL;
+      if (realpath) {
         id = realpath.match(/id=(\d+)/)?.[1];
       }
     }
@@ -287,6 +296,7 @@ async function importMusicSheet(urlLike) {
   if (cids.length === 0) {
     return;
   }
+
   const songs = (
     await axios({
       url: `https://music.migu.cn/v3/api/music/audioPlayer/songs?type=1&copyrightId=${cids.join(
@@ -414,15 +424,19 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
 
   return {
     ...topListItem,
-    musicList: res.data.data.songs.items.filter((_) => _.fullSong.vipFlag === 0).map(_ => ({
-      id: _.id,
-      artwork: _.mediumPic?.startsWith('//')? `https:${_.mediumPic}`: _.mediumPic,
-      title: _.name,
-      artist: _.singers?.map((_) => _.name)?.join(", "),
-      album: _.album?.albumName,
-      copyrightId: _.copyrightId,
-      singerId: _.singers?.[0]?.id,
-    })),
+    musicList: res.data.data.songs.items
+      .filter((_) => _.fullSong.vipFlag === 0)
+      .map((_) => ({
+        id: _.id,
+        artwork: _.mediumPic?.startsWith("//")
+          ? `https:${_.mediumPic}`
+          : _.mediumPic,
+        title: _.name,
+        artist: _.singers?.map((_) => _.name)?.join(", "),
+        album: _.album?.albumName,
+        copyrightId: _.copyrightId,
+        singerId: _.singers?.[0]?.id,
+      })),
   };
 }
 
@@ -432,14 +446,15 @@ module.exports = {
   appVersion: ">0.1.0-alpha.0",
   hints: {
     importMusicSheet: [
-      '咪咕APP：自建歌单-分享-复制链接，直接粘贴即可',
-      'H5/PC端：复制URL并粘贴，或者直接输入纯数字歌单ID即可',
-      '导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待'
-    ]
+      "咪咕APP：自建歌单-分享-复制链接，直接粘贴即可",
+      "H5/PC端：复制URL并粘贴，或者直接输入纯数字歌单ID即可",
+      "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
+    ],
   },
   primaryKey: ["id", "copyrightId"],
   cacheControl: "no-store",
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/migu/index.js",
+  srcUrl:
+    "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/migu/index.js",
   async getMediaSource(musicItem, quality) {
     if (quality === "standard" && musicItem.url) {
       return {
@@ -547,5 +562,5 @@ module.exports = {
   getLyric: getLyric,
   importMusicSheet,
   getTopLists,
-  getTopListDetail
+  getTopListDetail,
 };
