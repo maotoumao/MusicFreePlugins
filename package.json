@@ -6,7 +6,7 @@
   "scripts": {
     "serve": "http-server .",
     "build": "tsc & node ./scripts/generate.js",
-    "test": "ts-node -T ./plugins/migu/index.ts"
+    "test": "ts-node -T ./plugins/maoerfm/index.ts"
   },
   "keywords": [],
   "author": {
