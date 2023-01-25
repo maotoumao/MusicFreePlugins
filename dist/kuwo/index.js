@@ -241,6 +241,7 @@ async function importMusicSheet(urlLike) {
         });
         ++page;
     }
+    return musicList;
 }
 module.exports = {
     platform: "酷我",

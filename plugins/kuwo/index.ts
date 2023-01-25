@@ -304,6 +304,7 @@ async function importMusicSheet(urlLike: string) {
     });
     ++page;
   }
+  return musicList;
 }
 
 module.exports = {
