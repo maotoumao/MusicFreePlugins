@@ -375,9 +375,9 @@ async function getSheetMusicById(id) {
 
 async function importMusicSheet(urlLike) {
   const matchResult = urlLike.match(
-    /(?:https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+))|(?:https?:\/\/music\.163\.com\/playlist\/([0-9]+)\/.*)/
+    /(?:https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+))|(?:https?:\/\/music\.163\.com\/playlist\/([0-9]+)\/.*)|(?:https?:\/\/music.163.com\/#\/playlist\?id=(\d+))|(?:^\s*(\d+)\s*$)/
   );
-  const id = matchResult[1] || matchResult[2];
+  const id = matchResult[1] || matchResult[2] | matchResult[3] | matchResult[4];
   return getSheetMusicById(id);
 }
 
@@ -449,6 +449,14 @@ module.exports = {
   version: "0.1.0",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
   cacheControl: "no-store",
+  hints: {
+    importMusicSheet: [
+      '网易云移动端：APP点击分享，然后复制链接',
+      '网易云H5/PC端：复制URL，或者直接输入歌单ID即可',
+      '默认歌单无法导入，先新建一个空白歌单复制过去再导入新歌单即可',
+      '导入过程中会过滤掉所有VIP/试听/收费音乐，请耐心等待'
+    ]
+  },
   async search(query, page, type) {
     if (type === "music") {
       return await searchMusic(query, page);
