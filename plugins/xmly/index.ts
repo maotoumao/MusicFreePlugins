@@ -192,7 +192,7 @@ module.exports = {
   platform: "喜马拉雅",
   version: "0.1.0",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/xmly/index.js",
-  cacheControl: "no-store",
+  cacheControl: "no-cache",
   search,
   getAlbumInfo,
   getMediaSource,

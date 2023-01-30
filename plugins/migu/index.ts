@@ -452,7 +452,7 @@ module.exports = {
     ],
   },
   primaryKey: ["id", "copyrightId"],
-  cacheControl: "no-store",
+  cacheControl: "no-cache",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/migu/index.js",
   async getMediaSource(musicItem, quality) {
