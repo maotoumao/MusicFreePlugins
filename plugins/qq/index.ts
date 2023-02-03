@@ -471,7 +471,7 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
 // 接口参考：https://jsososo.github.io/QQMusicApi/#/
 module.exports = {
   platform: "QQ音乐",
-  version: "0.1.0",
+  version: "0.1.1",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
   cacheControl: "no-cache",
@@ -509,7 +509,7 @@ module.exports = {
       purl = result.req_0.data.midurlinfo[0].purl;
     }
     if (!purl) {
-      throw new Error();
+      return null;
     }
     if (domain === "") {
       domain =
