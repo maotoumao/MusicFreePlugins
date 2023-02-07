@@ -377,7 +377,7 @@ async function importMusicSheet(urlLike) {
   const matchResult = urlLike.match(
     /(?:https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+))|(?:https?:\/\/music\.163\.com\/playlist\/([0-9]+)\/.*)|(?:https?:\/\/music.163.com\/#\/playlist\?id=(\d+))|(?:^\s*(\d+)\s*$)/
   );
-  const id = matchResult[1] || matchResult[2] | matchResult[3] | matchResult[4];
+  const id = matchResult[1] || matchResult[2] || matchResult[3] || matchResult[4];
   return getSheetMusicById(id);
 }
 
@@ -446,7 +446,7 @@ async function getMediaSource(musicItem: IMusic.IMusicItem, quality: IMusic.IQua
 
 module.exports = {
   platform: "网易云",
-  version: "0.1.0",
+  version: "0.1.1",
   appVersion: '>0.1.0-alpha.0',
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
   cacheControl: "no-store",
