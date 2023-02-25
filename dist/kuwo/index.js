@@ -166,9 +166,11 @@ async function getAlbumInfo(albumItem) {
             httpStatus: 1,
         },
     })).data;
-    return Object.assign(Object.assign({}, albumItem), { musicList: res.data.musicList
+    return {
+        musicList: res.data.musicList
             .filter((_) => !_.isListenFee)
-            .map(formatMusicItem) });
+            .map(formatMusicItem),
+    };
 }
 async function getTopLists() {
     var _a;

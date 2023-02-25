@@ -71,13 +71,15 @@ async function getAlbumInfo(albumItem) {
             drama_id: albumItem.id,
         },
     })).data;
-    return Object.assign(Object.assign({}, albumItem), { musicList: res.info.episodes.episode
+    return {
+        musicList: res.info.episodes.episode
             .filter(validMusicFilter)
             .map(_ => {
             const r = formatMusicItem(_);
             r.artwork = albumItem.artwork;
             return r;
-        }) });
+        }),
+    };
 }
 async function getMediaSource(musicItem, quality) {
     if (quality === "high" || quality === "super") {

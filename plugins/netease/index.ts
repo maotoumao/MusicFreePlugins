@@ -291,8 +291,7 @@ async function getAlbumInfo(albumItem) {
   ).data;
 
   return {
-    ...albumItem,
-    description: res.album.description,
+    albumItem: {description: res.album.description},
     musicList: (res.songs || [])
       .filter(musicCanPlayFilter)
       .map(formatMusicItem),

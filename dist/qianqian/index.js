@@ -177,7 +177,9 @@ async function getAlbumInfo(albumItem) {
         const musicList = (res.data.data.trackList || [])
             .filter(musicCanPlayFilter)
             .map((_) => (Object.assign(Object.assign({}, formatMusicItem(_)), { artwork: albumItem.artwork, album: albumItem.name })));
-        return Object.assign(Object.assign({}, albumItem), { musicList });
+        return {
+            musicList,
+        };
     }
 }
 async function getTopLists() {

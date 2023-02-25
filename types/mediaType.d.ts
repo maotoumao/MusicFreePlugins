@@ -48,6 +48,12 @@ declare namespace IAlbum {
     // TODO: 在这里补充完整类型
     [k: string | number]: any;
   }
+
+  interface IAlbumInfoResult {
+    isEnd?: boolean;
+    albumItem?: IAlbum.IAlbumItem;
+    musicList?: IMusic.IMusicItem[];
+  }
 }
 
 /** 作者 */

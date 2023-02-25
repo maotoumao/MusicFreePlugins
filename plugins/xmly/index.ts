@@ -87,20 +87,22 @@ async function searchArtist(query: string, page: number) {
   };
 }
 
-async function getAlbumInfo(albumItem: IAlbum.IAlbumItem) {
+async function getAlbumInfo(albumItem: IAlbum.IAlbumItem, page: number = 1) {
   const res = await axios.get(
     "https://www.ximalaya.com/revision/album/v1/getTracksList",
     {
       params: {
         albumId: albumItem.id,
-        pageNum: 1,
+        pageNum: page,
         pageSize: 50,
       },
     }
   );
-
   return {
-    ...albumItem,
+    isEnd: page * 50 >= res.data.data.trackTotalCount,
+    albumItem: {
+      worksNum: res.data.data.trackTotalCount
+    },
     musicList: res.data.data.tracks.filter(paidMusicFilter).map((_) => {
       const r = formatMusicItem(_);
       r.artwork = albumItem.artwork;
@@ -190,7 +192,7 @@ async function getArtistWorks(artistItem, page, type) {
 
 module.exports = {
   platform: "喜马拉雅",
-  version: "0.1.0",
+  version: "0.1.1",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/xmly/index.js",
   cacheControl: "no-cache",
   search,
@@ -198,3 +200,4 @@ module.exports = {
   getMediaSource,
   getArtistWorks,
 };
+

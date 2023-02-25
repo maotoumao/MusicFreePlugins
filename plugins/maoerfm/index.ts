@@ -89,7 +89,6 @@ async function getAlbumInfo(albumItem) {
   ).data;
 
   return {
-    ...albumItem,
     musicList: res.info.episodes.episode
       .filter(validMusicFilter)
       .map(_ => {

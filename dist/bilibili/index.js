@@ -358,7 +358,9 @@ module.exports = {
                 return Object.assign(Object.assign({}, albumItem), { cid: _.cid, title: _.part, duration: durationToSec(_.duration), id: _.cid });
             });
         }
-        return Object.assign(Object.assign({}, albumItem), { musicList });
+        return {
+            musicList,
+        };
     },
     getArtistWorks,
     getTopLists,

@@ -232,7 +232,8 @@ async function getAlbumInfo(albumItem) {
             id: albumItem.id,
         },
     })).data;
-    return Object.assign(Object.assign({}, albumItem), { musicList: res.data.map((_) => ({
+    return {
+        musicList: res.data.map((_) => ({
             id: _.ID,
             typeEname: _.SK,
             title: _.SN,
@@ -240,7 +241,8 @@ async function getAlbumInfo(albumItem) {
             singerId: _.user.ID,
             album: albumItem.title,
             artwork: albumItem.artwork,
-        })) });
+        })),
+    };
 }
 async function getTopLists() {
     return [

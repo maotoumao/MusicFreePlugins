@@ -541,8 +541,7 @@ module.exports = {
       ).data || {}; // 有个trackcount
 
     return {
-      ...albumItem,
-      description: albumDesc.albumIntro,
+      albumItem: { description: albumDesc.albumIntro },
       musicList: musicList.result.results
         .filter(musicCanPlayFilter)
         .map((_) => ({

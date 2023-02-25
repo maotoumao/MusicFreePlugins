@@ -1,4 +1,6 @@
 import axios from "axios";
+import { load } from "cheerio";
+
 const pageSize = 20;
 
 const validMusicFilter = (_) => _.privilege === 0 || _.privilege === 8;
@@ -73,7 +75,7 @@ async function searchAlbum(query, page) {
     id: _.albumid,
     artwork: _.imgurl?.replace("{size}", "400"),
     artist: _.singername,
-    title: _.albumname,
+    title: load(_.albumname).text(),
     description: _.intro,
     date: _.publishtime?.slice(0, 10)
   }));
@@ -206,7 +208,7 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   };
 }
 
-async function getAlbumInfo(albumItem: IAlbum.IAlbumItem) {
+async function getAlbumInfo(albumItem: IAlbum.IAlbumItem, page = 1) {
   const res = (
     await axios.get("http://mobilecdn.kugou.com/api/v3/album/song", {
       params: {
@@ -215,14 +217,17 @@ async function getAlbumInfo(albumItem: IAlbum.IAlbumItem) {
         plat: 0,
         pagesize: 100,
         area_code: 1,
-        page: 1,
+        page,
         with_res_tag: 0,
       },
     })
   ).data;
 
   return {
-    ...albumItem,
+    isEnd: page * 100 >= res.data.total,
+    albumItem: {
+      worksNum: res.data.total
+    },
     musicList: res.data.info.filter(validMusicFilter).map((_) => {
       const [artist, songname] = _.filename.split("-");
 
@@ -244,7 +249,7 @@ async function getAlbumInfo(albumItem: IAlbum.IAlbumItem) {
 
 module.exports = {
   platform: "酷狗",  
-  version: "0.1.0",
+  version: "0.1.1",
   appVersion: ">0.1.0-alpha.0",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kugou/index.js",
   cacheControl: "no-cache",
@@ -262,3 +267,4 @@ module.exports = {
   getTopListDetail,
   getAlbumInfo
 };
+

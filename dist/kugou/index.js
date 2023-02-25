@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = require("axios");
+const cheerio_1 = require("cheerio");
 const pageSize = 20;
 const validMusicFilter = (_) => _.privilege === 0 || _.privilege === 8;
 function formatMusicItem(_) {
@@ -65,7 +66,7 @@ async function searchAlbum(query, page) {
             id: _.albumid,
             artwork: (_a = _.imgurl) === null || _a === void 0 ? void 0 : _a.replace("{size}", "400"),
             artist: _.singername,
-            title: _.albumname,
+            title: (0, cheerio_1.load)(_.albumname).text(),
             description: _.intro,
             date: (_b = _.publishtime) === null || _b === void 0 ? void 0 : _b.slice(0, 10)
         });
@@ -182,7 +183,7 @@ async function getTopListDetail(topListItem) {
     });
     return Object.assign(Object.assign({}, topListItem), { musicList: res.data.data.info.map(formatMusicItem) });
 }
-async function getAlbumInfo(albumItem) {
+async function getAlbumInfo(albumItem, page = 1) {
     const res = (await axios_1.default.get("http://mobilecdn.kugou.com/api/v3/album/song", {
         params: {
             version: 9108,
@@ -190,11 +191,16 @@ async function getAlbumInfo(albumItem) {
             plat: 0,
             pagesize: 100,
             area_code: 1,
-            page: 1,
+            page,
             with_res_tag: 0,
         },
     })).data;
-    return Object.assign(Object.assign({}, albumItem), { musicList: res.data.info.filter(validMusicFilter).map((_) => {
+    return {
+        isEnd: page * 100 >= res.data.total,
+        albumItem: {
+            worksNum: res.data.total
+        },
+        musicList: res.data.info.filter(validMusicFilter).map((_) => {
             var _a;
             const [artist, songname] = _.filename.split("-");
             return {
@@ -209,11 +215,12 @@ async function getAlbumInfo(albumItem) {
                 sqhash: _.sqhash,
                 origin_hash: _.origin_hash,
             };
-        }) });
+        }),
+    };
 }
 module.exports = {
     platform: "酷狗",
-    version: "0.1.0",
+    version: "0.1.1",
     appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kugou/index.js",
     cacheControl: "no-cache",

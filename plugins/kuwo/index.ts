@@ -201,7 +201,6 @@ async function getAlbumInfo(albumItem) {
   ).data;
 
   return {
-    ...albumItem,
     musicList: res.data.musicList
       .filter((_) => !_.isListenFee)
       .map(formatMusicItem),

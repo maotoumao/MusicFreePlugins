@@ -112,10 +112,11 @@ declare namespace IPlugin {
     getLyric?: (
       musicItem: IMusic.IMusicItem
     ) => Promise<ILyric.ILyricSource | null>;
-    /** 获取专辑信息，里面的歌曲不要分页 */
+    /** 获取专辑信息，里面的歌曲分页 */
     getAlbumInfo?: (
-      albumItem: IAlbum.IAlbumItem
-    ) => Promise<WithMusicList<IAlbum.IAlbumItem> | null>;
+      albumItem: IAlbum.IAlbumItem,
+      page: number
+    ) => Promise<IAlbum.IAlbumInfoResult | null>;
     /** 获取作品，有分页 */
     getArtistWorks?: <T extends Exclude<ICommon.SupportMediaType, "artist">>(
       artistItem: IArtist.IArtistItem,

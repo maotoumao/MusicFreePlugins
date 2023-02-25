@@ -235,12 +235,14 @@ async function getAlbumInfo(albumItem) {
         xsrfCookieName: "XSRF-TOKEN",
         withCredentials: true,
     })).data;
-    return Object.assign(Object.assign({}, albumItem), { musicList: res.albumSonglist.data.songList
+    return {
+        musicList: res.albumSonglist.data.songList
             .filter((_) => validSongFilter(_.songInfo))
             .map((item) => {
             const _ = item.songInfo;
             return formatMusicItem(_);
-        }) });
+        }),
+    };
 }
 async function getArtistSongs(artistItem, page) {
     const url = changeUrlQuery({

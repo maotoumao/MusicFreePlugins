@@ -218,7 +218,6 @@ async function getAlbumInfo(albumItem) {
         album: albumItem.name,
       }));
     return {
-      ...albumItem,
       musicList,
     };
   }

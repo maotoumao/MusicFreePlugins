@@ -440,7 +440,6 @@ module.exports = {
       });
     }
     return {
-      ...albumItem,
       musicList,
     };
   },

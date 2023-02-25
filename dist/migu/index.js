@@ -436,7 +436,9 @@ module.exports = {
                 albumId: albumItem.id,
             },
         })).data || {};
-        return Object.assign(Object.assign({}, albumItem), { description: albumDesc.albumIntro, musicList: musicList.result.results
+        return {
+            albumItem: { description: albumDesc.albumIntro },
+            musicList: musicList.result.results
                 .filter(musicCanPlayFilter)
                 .map((_) => ({
                 id: _.songId,
@@ -448,7 +450,8 @@ module.exports = {
                 rawLrc: _.lyricLrc,
                 copyrightId: _.copyrightId,
                 singerId: _.singerId,
-            })) });
+            })),
+        };
     },
     getArtistWorks: getArtistWorks,
     getLyric: getLyric,

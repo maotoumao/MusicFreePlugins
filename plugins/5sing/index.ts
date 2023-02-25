@@ -272,7 +272,6 @@ async function getAlbumInfo(albumItem) {
   ).data;
 
   return {
-    ...albumItem,
     musicList: res.data.map((_) => ({
       id: _.ID,
       typeEname: _.SK,

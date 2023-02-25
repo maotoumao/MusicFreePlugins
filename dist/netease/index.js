@@ -235,9 +235,12 @@ async function getAlbumInfo(albumItem) {
         headers,
         data: paeData,
     })).data;
-    return Object.assign(Object.assign({}, albumItem), { description: res.album.description, musicList: (res.songs || [])
+    return {
+        albumItem: { description: res.album.description },
+        musicList: (res.songs || [])
             .filter(musicCanPlayFilter)
-            .map(formatMusicItem) });
+            .map(formatMusicItem),
+    };
 }
 async function getValidMusicItems(trackIds) {
     const headers = {
