@@ -96,7 +96,7 @@ function formatMedia(result) {
         description: result.description,
         duration: durationToSec(result.duration),
         tags: (_j = result.tag) === null || _j === void 0 ? void 0 : _j.split(","),
-        date: dayjs.unix(result.pubdate).format("YYYY-MM-DD"),
+        date: dayjs.unix(result.pubdate || result.created).format("YYYY-MM-DD"),
     };
 }
 async function searchAlbum(keyword, page) {
@@ -123,9 +123,6 @@ async function searchArtist(keyword, page) {
     };
 }
 async function getArtistWorks(artistItem, page, type) {
-    if (type !== "album") {
-        return;
-    }
     const queryHeaders = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
         accept: "application/json, text/plain, */*",
@@ -329,7 +326,7 @@ async function getTopListDetail(topListItem) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.0",
+    version: "0.1.1",
     defaultSearchType: "album",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",

@@ -6,7 +6,7 @@
   "scripts": {
     "serve": "http-server .",
     "build": "tsc & node ./scripts/generate.js",
-    "test": "ts-node -T ./plugins/kugou/index.ts"
+    "test-bilibili": "ts-node -T ./plugins/bilibili/index.ts"
   },
   "keywords": [],
   "author": {
