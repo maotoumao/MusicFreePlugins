@@ -15,11 +15,11 @@ let cookie;
 async function getCid(bvid, aid) {
   const params = bvid
     ? {
-        bvid: bvid,
-      }
+      bvid: bvid,
+    }
     : {
-        aid: aid,
-      };
+      aid: aid,
+    };
   const cidRes = (
     await axios.get("https://api.bilibili.com/x/web-interface/view?%s", {
       headers: headers,
@@ -97,6 +97,40 @@ async function searchBase(keyword: string, page: number, searchType) {
   ).data;
   return res.data;
 }
+
+/** 获取收藏夹 */
+async function getFavoriteList(id: number | string) {
+  const result = [];
+  const pageSize = 5;
+  let page = 1;
+
+  while (true) {
+    try {
+      const { data: { data: { medias, has_more } } } = await axios.get(
+        'https://api.bilibili.com/x/v3/fav/resource/list', {
+        params: {
+          media_id: id,
+          platform: 'web',
+          ps: pageSize,
+          pn: page,
+        },
+      },
+      );
+      result.push(...medias);
+
+      if (!has_more) {
+        break;
+      }
+      page += 1;
+    } catch (error) {
+      console.warn(error);
+      break;
+    }
+  }
+
+  return result;
+}
+
 
 function formatMedia(result: any) {
   return {
@@ -197,11 +231,11 @@ async function getMediaSource(
 
   const _params = musicItem.bvid
     ? {
-        bvid: musicItem.bvid,
-      }
+      bvid: musicItem.bvid,
+    }
     : {
-        aid: musicItem.aid,
-      };
+      aid: musicItem.aid,
+    };
 
   const res = (
     await axios.get("https://api.bilibili.com/x/player/playurl", {
@@ -395,6 +429,30 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   };
 }
 
+async function importMusicSheet(urlLike) {
+  let id: string;
+  if (/^(\d+)$/.test(urlLike)) {
+    id = urlLike;
+  }
+  if (!id) {
+    id = urlLike.match(/\/playlist\/pl(\d+)/i)?.[1];
+  }
+  if (!id) {
+    return;
+  }
+  const musicSheet = await getFavoriteList(id);
+  return musicSheet.map(_ => ({
+    id: _.id,
+    aid: _.aid,
+    bvid: _.bvid,
+    artwork: _.cover,
+    title: _.title,
+    artist: _.upper?.name,
+    album: _.bvid ?? _.aid,
+    duration: durationToSec(_.duration),
+  }))
+}
+
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
@@ -403,6 +461,14 @@ module.exports = {
   cacheControl: "no-cache",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
   primaryKey: ["id", "aid", "bvid", "cid"],
+  hints: {
+    importMusicSheet: [
+        'bilibili 移动端：APP点击我的，空间，右上角分享，复制链接，浏览器打开切换桌面版网站，点击播放全部视频，复制链接',
+        'bilibili H5/PC端：复制收藏夹URL，或者直接输入ID即可',
+        '非公开收藏夹无法导入，编辑收藏夹改为公开即刻',
+        '导入时间和歌单大小有关，请耐心等待'
+    ]
+},
   async search(keyword, page, type) {
     if (type === "album" || type === "music") {
       return await searchAlbum(keyword, page);
@@ -443,4 +509,5 @@ module.exports = {
   getArtistWorks,
   getTopLists,
   getTopListDetail,
+  importMusicSheet,
 };
