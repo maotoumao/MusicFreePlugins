@@ -101,7 +101,7 @@ async function searchBase(keyword: string, page: number, searchType) {
 /** 获取收藏夹 */
 async function getFavoriteList(id: number | string) {
   const result = [];
-  const pageSize = 5;
+  const pageSize = 20;
   let page = 1;
 
   while (true) {
@@ -429,10 +429,13 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   };
 }
 
-async function importMusicSheet(urlLike) {
+async function importMusicSheet(urlLike: string) {
   let id: string;
-  if (/^(\d+)$/.test(urlLike)) {
-    id = urlLike;
+  if (!id) {
+    id = urlLike.match(/^\s*(\d+)\s*$/)?.[1];
+  }
+  if (!id) {
+    id = urlLike.match(/^(?:.*)fid=(\d+).*$/)?.[1];
   }
   if (!id) {
     id = urlLike.match(/\/playlist\/pl(\d+)/i)?.[1];
@@ -456,16 +459,16 @@ async function importMusicSheet(urlLike) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.1",
+  version: "0.1.2",
   defaultSearchType: "album",
   cacheControl: "no-cache",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
   primaryKey: ["id", "aid", "bvid", "cid"],
   hints: {
     importMusicSheet: [
-        'bilibili 移动端：APP点击我的，空间，右上角分享，复制链接，浏览器打开切换桌面版网站，点击播放全部视频，复制链接',
+        // 'bilibili 移动端：APP点击我的，空间，右上角分享，复制链接，浏览器打开切换桌面版网站，点击播放全部视频，复制链接',
         'bilibili H5/PC端：复制收藏夹URL，或者直接输入ID即可',
-        '非公开收藏夹无法导入，编辑收藏夹改为公开即刻',
+        '非公开收藏夹无法导入，编辑收藏夹改为公开即可',
         '导入时间和歌单大小有关，请耐心等待'
     ]
 },
@@ -479,7 +482,6 @@ module.exports = {
   },
 
   getMediaSource,
-
   async getAlbumInfo(albumItem) {
     const cidRes = await getCid(albumItem.bvid, albumItem.aid);
 
