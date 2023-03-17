@@ -441,6 +441,9 @@ async function importMusicSheet(urlLike: string) {
     id = urlLike.match(/\/playlist\/pl(\d+)/i)?.[1];
   }
   if (!id) {
+    id = urlLike.match(/\/list\/ml(\d+)/i)?.[1];
+  }
+  if (!id) {
     return;
   }
   const musicSheet = await getFavoriteList(id);
