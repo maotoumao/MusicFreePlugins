@@ -351,7 +351,7 @@ async function getTopListDetail(topListItem) {
     return Object.assign(Object.assign({}, topListItem), { musicList: res.data.data.list.map(formatMedia) });
 }
 async function importMusicSheet(urlLike) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     let id;
     if (!id) {
         id = (_a = urlLike.match(/^\s*(\d+)\s*$/)) === null || _a === void 0 ? void 0 : _a[1];
@@ -361,6 +361,9 @@ async function importMusicSheet(urlLike) {
     }
     if (!id) {
         id = (_c = urlLike.match(/\/playlist\/pl(\d+)/i)) === null || _c === void 0 ? void 0 : _c[1];
+    }
+    if (!id) {
+        id = (_d = urlLike.match(/\/list\/ml(\d+)/i)) === null || _d === void 0 ? void 0 : _d[1];
     }
     if (!id) {
         return;
@@ -383,7 +386,7 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.2",
+    version: "0.1.3",
     defaultSearchType: "album",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",

@@ -462,14 +462,14 @@ async function importMusicSheet(urlLike: string) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.2",
+  version: "0.1.3",
   defaultSearchType: "album",
   cacheControl: "no-cache",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
   primaryKey: ["id", "aid", "bvid", "cid"],
   hints: {
     importMusicSheet: [
-        // 'bilibili 移动端：APP点击我的，空间，右上角分享，复制链接，浏览器打开切换桌面版网站，点击播放全部视频，复制链接',
+        'bilibili 移动端：APP点击我的，空间，右上角分享，复制链接，浏览器打开切换桌面版网站，点击播放全部视频，复制链接',
         'bilibili H5/PC端：复制收藏夹URL，或者直接输入ID即可',
         '非公开收藏夹无法导入，编辑收藏夹改为公开即可',
         '导入时间和歌单大小有关，请耐心等待'
