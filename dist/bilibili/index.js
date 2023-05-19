@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = require("axios");
 const dayjs = require("dayjs");
 const he = require("he");
+const CryptoJs = require("crypto-js");
 const headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
     accept: "*/*",
@@ -162,15 +163,19 @@ async function getArtistWorks(artistItem, page, type) {
         "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
     };
     await getCookie();
+    const now = Date.now();
     const params = {
         mid: artistItem.id,
         ps: 30,
         tid: 0,
         pn: page,
+        web_location: 1550101,
+        wts: now,
+        order_avoided: true,
+        w_rid: CryptoJs.MD5(`${now}`).toString(),
         order: "pubdate",
-        jsonp: "jsonp",
     };
-    const res = (await axios_1.default.get("https://api.bilibili.com/x/space/arc/search", {
+    const res = (await axios_1.default.get("https://api.bilibili.com/x/space/wbi/arc/search", {
         headers: Object.assign(Object.assign({}, queryHeaders), { cookie: `buvid3=${cookie.b_3};buvid4=${cookie.b_4}` }),
         params: params,
     })).data;
@@ -386,7 +391,7 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.3",
+    version: "0.1.4",
     defaultSearchType: "album",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",

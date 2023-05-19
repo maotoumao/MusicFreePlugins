@@ -1,6 +1,8 @@
 import axios from "axios";
 import dayjs = require("dayjs");
 import he = require("he");
+import CryptoJs = require("crypto-js");
+
 
 const headers = {
   "user-agent":
@@ -192,16 +194,20 @@ async function getArtistWorks(artistItem, page, type) {
   };
 
   await getCookie();
+  const now = Date.now();
   const params = {
     mid: artistItem.id,
     ps: 30,
     tid: 0,
     pn: page,
+    web_location: 1550101,
+    wts: now,
+    order_avoided: true,
+    w_rid: CryptoJs.MD5(`${now}`).toString(),
     order: "pubdate",
-    jsonp: "jsonp",
   };
   const res = (
-    await axios.get("https://api.bilibili.com/x/space/arc/search", {
+    await axios.get("https://api.bilibili.com/x/space/wbi/arc/search", {
       headers: {
         ...queryHeaders,
         cookie: `buvid3=${cookie.b_3};buvid4=${cookie.b_4}`,
@@ -209,6 +215,7 @@ async function getArtistWorks(artistItem, page, type) {
       params: params,
     })
   ).data;
+
   const resultData = res.data;
   const albums = resultData.list.vlist.map(formatMedia);
 
@@ -462,7 +469,7 @@ async function importMusicSheet(urlLike: string) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.3",
+  version: "0.1.4",
   defaultSearchType: "album",
   cacheControl: "no-cache",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
@@ -516,3 +523,4 @@ module.exports = {
   getTopListDetail,
   importMusicSheet,
 };
+
