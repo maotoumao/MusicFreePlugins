@@ -179,6 +179,15 @@ async function searchArtist(keyword, page) {
   };
 }
 
+function getMixinKey(e) {
+  var t = [];
+  return [46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 34, 44, 52].forEach((function(r) {
+      e.charAt(r) && t.push(e.charAt(r))
+  }
+  )),
+  t.join("").slice(0, 32)
+}
+
 async function getArtistWorks(artistItem, page, type) {
   const queryHeaders = {
     "user-agent":
@@ -194,25 +203,41 @@ async function getArtistWorks(artistItem, page, type) {
   };
 
   await getCookie();
-  const now = Date.now();
+  const now = Math.round(Date.now() / 1e3);
   const params = {
     mid: artistItem.id,
     ps: 30,
     tid: 0,
     pn: page,
     web_location: 1550101,
-    wts: now,
     order_avoided: true,
-    w_rid: CryptoJs.MD5(`${now}`).toString(),
     order: "pubdate",
+    platform: 'web',
+    wts: now.toString(),
   };
+  
+
+  const npi = "4a1d4479a1ea4146bc7552eea71c28e9fa5812e23a204d10b332dc24d992432d";
+  const o = getMixinKey(npi);
+  const l = Object.keys(params).sort();
+  let c = [];
+  for(let d = 0, u = /[!'\(\)*]/g; d < l.length; ++d) {
+    let [h, p] = [l[d], params[l[d]]];
+    p && "string" == typeof p && (p = p.replace(u, "")),
+    null != p && c.push("".concat(encodeURIComponent(h), "=").concat(encodeURIComponent(p)));
+  }
+  const f = c.join("&");
+  const w_rid = CryptoJs.MD5(f + o).toString();
   const res = (
     await axios.get("https://api.bilibili.com/x/space/wbi/arc/search", {
       headers: {
         ...queryHeaders,
         cookie: `buvid3=${cookie.b_3};buvid4=${cookie.b_4}`,
       },
-      params: params,
+      params: {
+        ...params,
+        w_rid
+      },
     })
   ).data;
 
@@ -469,7 +494,7 @@ async function importMusicSheet(urlLike: string) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.4",
+  version: "0.1.5",
   defaultSearchType: "album",
   cacheControl: "no-cache",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
