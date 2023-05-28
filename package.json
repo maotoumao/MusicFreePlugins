@@ -7,6 +7,8 @@
     "serve": "http-server .",
     "build": "tsc & node ./scripts/generate.js",
     "test-kugou": "ts-node -T ./plugins/kugou/index.ts",
+    "test-migu": "ts-node -T ./plugins/migu/index.ts",
+    "test-netease": "ts-node -T ./plugins/netease/index.ts",
     "test-bilibili": "ts-node -T ./plugins/bilibili/index.ts"
   },
   "keywords": [],

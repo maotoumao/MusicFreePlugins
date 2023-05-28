@@ -176,6 +176,43 @@ async function getLyric(musicItem) {
         rawLrc: result.data.lyricLrc,
     };
 }
+async function getMusicSheetInfo(sheet, page) {
+    const res = (await axios_1.default.get("https://m.music.migu.cn/migumusic/h5/playlist/songsInfo", {
+        params: {
+            palylistId: sheet.id,
+            pageNo: page,
+            pageSize: 30
+        },
+        headers: {
+            Host: 'm.music.migu.cn',
+            referer: 'https://m.music.migu.cn/v4/music/playlist/',
+            By: '7242bd16f68cd9b39c54a8e61537009f',
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/113.0.0.0'
+        }
+    })).data.data;
+    if (!res) {
+        return {
+            isEnd: true,
+            data: []
+        };
+    }
+    const isEnd = res.total < 30;
+    return {
+        isEnd,
+        musicList: res.items.filter(item => { var _a; return ((_a = item === null || item === void 0 ? void 0 : item.fullSong) === null || _a === void 0 ? void 0 : _a.vipFlag) === 0; }).map(_ => {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+            return ({
+                id: _.id,
+                artwork: ((_a = _.mediumPic) === null || _a === void 0 ? void 0 : _a.startsWith('//')) ? `http:${_.mediumPic}` : _.mediumPic,
+                title: _.name,
+                artist: (_f = (_e = (_d = (_c = (_b = _.singers) === null || _b === void 0 ? void 0 : _b.map) === null || _c === void 0 ? void 0 : _c.call(_b, _ => _.name)) === null || _d === void 0 ? void 0 : _d.join) === null || _e === void 0 ? void 0 : _e.call(_d, ',')) !== null && _f !== void 0 ? _f : '',
+                album: (_h = (_g = _.album) === null || _g === void 0 ? void 0 : _g.albumName) !== null && _h !== void 0 ? _h : '',
+                copyrightId: _.copyrightId,
+                singerId: (_k = (_j = _.singers) === null || _j === void 0 ? void 0 : _j[0]) === null || _k === void 0 ? void 0 : _k.id,
+            });
+        })
+    };
+}
 async function importMusicSheet(urlLike) {
     var _a, _b, _c, _d;
     let id;
@@ -354,9 +391,83 @@ async function getTopListDetail(topListItem) {
             });
         }) });
 }
+async function getRecommendSheetTags() {
+    const allTags = (await axios_1.default.get("https://m.music.migu.cn/migumusic/h5/playlist/allTag", {
+        headers: {
+            host: "m.music.migu.cn",
+            referer: "https://m.music.migu.cn/v4/music/playlist",
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/113.0.0.0",
+            By: "7242bd16f68cd9b39c54a8e61537009f",
+        },
+    })).data.data.tags;
+    const data = allTags.map((_) => {
+        return {
+            title: _.tagName,
+            data: _.tags.map((_) => ({
+                id: _.tagId,
+                title: _.tagName,
+            })),
+        };
+    });
+    return {
+        pinned: [
+            {
+                title: "小清新",
+                id: "1000587673",
+            },
+            {
+                title: "电视剧",
+                id: "1001076078",
+            },
+            {
+                title: "民谣",
+                id: "1000001775",
+            },
+            {
+                title: "旅行",
+                id: "1000001749",
+            },
+            {
+                title: "思念",
+                id: "1000001703",
+            },
+        ],
+        data,
+    };
+}
+async function getRecommendSheetsByTag(sheetItem, page) {
+    const pageSize = 20;
+    const res = (await axios_1.default.get("https://m.music.migu.cn/migumusic/h5/playlist/list", {
+        params: {
+            columnId: 15127272,
+            tagId: sheetItem.id,
+            pageNum: page,
+            pageSize,
+        },
+        headers: {
+            "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/113.0.0.0",
+            host: "m.music.migu.cn",
+            By: "7242bd16f68cd9b39c54a8e61537009f",
+            Referer: "https://m.music.migu.cn/v4/music/playlist",
+        },
+    })).data.data;
+    const isEnd = page * pageSize > res.total;
+    const data = res.items.map((_) => ({
+        id: _.playListId,
+        artist: _.createUserName,
+        title: _.playListName,
+        artwork: _.image.startsWith("//") ? `http:${_.image}` : _.image,
+        playCount: _.playCount,
+        createUserId: _.createUserId,
+    }));
+    return {
+        isEnd,
+        data,
+    };
+}
 module.exports = {
     platform: "咪咕",
-    version: "0.1.0",
+    version: "0.1.1",
     appVersion: ">0.1.0-alpha.0",
     hints: {
         importMusicSheet: [
@@ -458,4 +569,7 @@ module.exports = {
     importMusicSheet,
     getTopLists,
     getTopListDetail,
+    getRecommendSheetTags,
+    getRecommendSheetsByTag,
+    getMusicSheetInfo
 };
