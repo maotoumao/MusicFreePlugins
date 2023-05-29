@@ -210,40 +210,47 @@ async function getLyric(musicItem) {
   };
 }
 
-async function getMusicSheetInfo(sheet:IMusicSheet.IMusicSheetItem, page){
-    const res = (await axios.get("https://m.music.migu.cn/migumusic/h5/playlist/songsInfo", {
+async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
+  const res = (
+    await axios.get("https://m.music.migu.cn/migumusic/h5/playlist/songsInfo", {
       params: {
-        palylistId: sheet.id, 
-        pageNo: page, 
-        pageSize: 30
+        palylistId: sheet.id,
+        pageNo: page,
+        pageSize: 30,
       },
       headers: {
-        Host: 'm.music.migu.cn',
-        referer: 'https://m.music.migu.cn/v4/music/playlist/',
-        By: '7242bd16f68cd9b39c54a8e61537009f',
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/113.0.0.0'
-      }
-    })).data.data;
-    if(!res) {
-      return {
-        isEnd: true,
-        data: []
-      }
-    }
-    const isEnd = res.total < 30;
-
+        Host: "m.music.migu.cn",
+        referer: "https://m.music.migu.cn/v4/music/playlist/",
+        By: "7242bd16f68cd9b39c54a8e61537009f",
+        "User-Agent":
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/113.0.0.0",
+      },
+    })
+  ).data.data;
+  if (!res) {
     return {
-      isEnd,
-      musicList: res.items.filter(item => item?.fullSong?.vipFlag === 0).map(_ => ({
+      isEnd: true,
+      data: [],
+    };
+  }
+  const isEnd = res.total < 30;
+
+  return {
+    isEnd,
+    musicList: res.items
+      .filter((item) => item?.fullSong?.vipFlag === 0)
+      .map((_) => ({
         id: _.id,
-        artwork: _.mediumPic?.startsWith('//')? `http:${_.mediumPic}` : _.mediumPic,
+        artwork: _.mediumPic?.startsWith("//")
+          ? `http:${_.mediumPic}`
+          : _.mediumPic,
         title: _.name,
-        artist: _.singers?.map?.(_ => _.name)?.join?.(',') ?? '',
-        album: _.album?.albumName ?? '',
+        artist: _.singers?.map?.((_) => _.name)?.join?.(",") ?? "",
+        album: _.album?.albumName ?? "",
         copyrightId: _.copyrightId,
         singerId: _.singers?.[0]?.id,
-      }))
-    }
+      })),
+  };
 }
 
 /// 导入歌单
@@ -561,6 +568,87 @@ async function getRecommendSheetsByTag(sheetItem, page: number) {
   };
 }
 
+let lastSource = null;
+
+async function getMediaSource(musicItem, quality) {
+  if (quality === "standard" && musicItem.url) {
+    return {
+      url: musicItem.url,
+    };
+  }
+  let toneFlag = "HQ";
+  if (quality === "super") {
+    toneFlag = "ZQ";
+  } else if (quality === "high") {
+    toneFlag = "SQ";
+  } else if (quality === "low") {
+    toneFlag = "PQ";
+  }
+  try {
+    const resource = (
+      await axios({
+        url: `https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${musicItem.copyrightId}&toneFlag=${toneFlag}`,
+        headers: {
+          referer: "http://m.music.migu.cn/v3",
+          uid: 123,
+          channel: "0146741",
+        },
+      })
+    ).data.data;
+    if (!resource.url) {
+      throw new Error();
+    }
+    return {
+      artwork: musicItem.artwork || (resource.songItem.albumImgs[0] || {}).img,
+      url: resource.url,
+    };
+  } catch {
+    if (lastSource?.songId !== musicItem.id) {
+      lastSource = (
+        await axios.get(
+          "https://c.musicapp.migu.cn/MIGUM2.0/v1.0/content/resourceinfo.do",
+          {
+            params: {
+              copyrightId: musicItem.copyrightId,
+              resourceType: 2,
+            },
+            headers: {
+              host: "m.music.migu.cn",
+              "user-agent":
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+            },
+          }
+        )
+      ).data.resource[0];
+    }
+    const artwork = musicItem.artwork || (lastSource.albumImgs?.[0] || {}).img;
+    let rateFormats = lastSource.newRateFormats ?? [];
+    let url;
+    if (quality === "super") {
+      url = rateFormats
+        .find((_) => _.formatType === "ZQ")
+        .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
+    } else if (quality === "high") {
+      url = rateFormats
+        .find((_) => _.formatType === "SQ")
+        .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
+    } else if (quality === "low") {
+      url = rateFormats
+        .find((_) => _.formatType === "PQ")
+        .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
+    } else {
+      url = rateFormats
+        .find((_) => _.formatType === "HQ")
+        .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
+    }
+
+    return {
+      artwork,
+      url,
+    };
+  }
+}
+
 module.exports = {
   platform: "咪咕",
   version: "0.1.1",
@@ -576,37 +664,7 @@ module.exports = {
   cacheControl: "no-cache",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/migu/index.js",
-  async getMediaSource(musicItem, quality) {
-    if (quality === "standard" && musicItem.url) {
-      return {
-        url: musicItem.url,
-      };
-    }
-    let toneFlag = "HQ";
-    if (quality === "super") {
-      toneFlag = "ZQ";
-    } else if (quality === "high") {
-      toneFlag = "SQ";
-    } else if (quality === "low") {
-      toneFlag = "PQ";
-    }
-    const resource = (
-      await axios({
-        url: `https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${musicItem.copyrightId}&toneFlag=${toneFlag}`,
-        headers: {
-          referer: "http://m.music.migu.cn/v3",
-          uid: 123,
-          channel: "0146741",
-        },
-      })
-    ).data.data;
-
-    return {
-      artwork: musicItem.artwork || (resource.songItem.albumImgs[0] || {}).img,
-      url: resource.url,
-    };
-  },
-
+  getMediaSource,
   async search(query, page, type) {
     if (type === "music") {
       return await searchMusic(query, page);
@@ -685,7 +743,5 @@ module.exports = {
   getTopListDetail,
   getRecommendSheetTags,
   getRecommendSheetsByTag,
-  getMusicSheetInfo
+  getMusicSheetInfo,
 };
-
-

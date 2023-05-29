@@ -181,36 +181,40 @@ async function getMusicSheetInfo(sheet, page) {
         params: {
             palylistId: sheet.id,
             pageNo: page,
-            pageSize: 30
+            pageSize: 30,
         },
         headers: {
-            Host: 'm.music.migu.cn',
-            referer: 'https://m.music.migu.cn/v4/music/playlist/',
-            By: '7242bd16f68cd9b39c54a8e61537009f',
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/113.0.0.0'
-        }
+            Host: "m.music.migu.cn",
+            referer: "https://m.music.migu.cn/v4/music/playlist/",
+            By: "7242bd16f68cd9b39c54a8e61537009f",
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/113.0.0.0",
+        },
     })).data.data;
     if (!res) {
         return {
             isEnd: true,
-            data: []
+            data: [],
         };
     }
     const isEnd = res.total < 30;
     return {
         isEnd,
-        musicList: res.items.filter(item => { var _a; return ((_a = item === null || item === void 0 ? void 0 : item.fullSong) === null || _a === void 0 ? void 0 : _a.vipFlag) === 0; }).map(_ => {
+        musicList: res.items
+            .filter((item) => { var _a; return ((_a = item === null || item === void 0 ? void 0 : item.fullSong) === null || _a === void 0 ? void 0 : _a.vipFlag) === 0; })
+            .map((_) => {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
             return ({
                 id: _.id,
-                artwork: ((_a = _.mediumPic) === null || _a === void 0 ? void 0 : _a.startsWith('//')) ? `http:${_.mediumPic}` : _.mediumPic,
+                artwork: ((_a = _.mediumPic) === null || _a === void 0 ? void 0 : _a.startsWith("//"))
+                    ? `http:${_.mediumPic}`
+                    : _.mediumPic,
                 title: _.name,
-                artist: (_f = (_e = (_d = (_c = (_b = _.singers) === null || _b === void 0 ? void 0 : _b.map) === null || _c === void 0 ? void 0 : _c.call(_b, _ => _.name)) === null || _d === void 0 ? void 0 : _d.join) === null || _e === void 0 ? void 0 : _e.call(_d, ',')) !== null && _f !== void 0 ? _f : '',
-                album: (_h = (_g = _.album) === null || _g === void 0 ? void 0 : _g.albumName) !== null && _h !== void 0 ? _h : '',
+                artist: (_f = (_e = (_d = (_c = (_b = _.singers) === null || _b === void 0 ? void 0 : _b.map) === null || _c === void 0 ? void 0 : _c.call(_b, (_) => _.name)) === null || _d === void 0 ? void 0 : _d.join) === null || _e === void 0 ? void 0 : _e.call(_d, ",")) !== null && _f !== void 0 ? _f : "",
+                album: (_h = (_g = _.album) === null || _g === void 0 ? void 0 : _g.albumName) !== null && _h !== void 0 ? _h : "",
                 copyrightId: _.copyrightId,
                 singerId: (_k = (_j = _.singers) === null || _j === void 0 ? void 0 : _j[0]) === null || _k === void 0 ? void 0 : _k.id,
             });
-        })
+        }),
     };
 }
 async function importMusicSheet(urlLike) {
@@ -465,6 +469,83 @@ async function getRecommendSheetsByTag(sheetItem, page) {
         data,
     };
 }
+let lastSource = null;
+async function getMediaSource(musicItem, quality) {
+    var _a, _b;
+    if (quality === "standard" && musicItem.url) {
+        return {
+            url: musicItem.url,
+        };
+    }
+    let toneFlag = "HQ";
+    if (quality === "super") {
+        toneFlag = "ZQ";
+    }
+    else if (quality === "high") {
+        toneFlag = "SQ";
+    }
+    else if (quality === "low") {
+        toneFlag = "PQ";
+    }
+    try {
+        const resource = (await (0, axios_1.default)({
+            url: `https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${musicItem.copyrightId}&toneFlag=${toneFlag}`,
+            headers: {
+                referer: "http://m.music.migu.cn/v3",
+                uid: 123,
+                channel: "0146741",
+            },
+        })).data.data;
+        if (!resource.url) {
+            throw new Error();
+        }
+        return {
+            artwork: musicItem.artwork || (resource.songItem.albumImgs[0] || {}).img,
+            url: resource.url,
+        };
+    }
+    catch (_c) {
+        if ((lastSource === null || lastSource === void 0 ? void 0 : lastSource.songId) !== musicItem.id) {
+            lastSource = (await axios_1.default.get("https://c.musicapp.migu.cn/MIGUM2.0/v1.0/content/resourceinfo.do", {
+                params: {
+                    copyrightId: musicItem.copyrightId,
+                    resourceType: 2,
+                },
+                headers: {
+                    host: "m.music.migu.cn",
+                    "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+                },
+            })).data.resource[0];
+        }
+        const artwork = musicItem.artwork || (((_a = lastSource.albumImgs) === null || _a === void 0 ? void 0 : _a[0]) || {}).img;
+        let rateFormats = (_b = lastSource.newRateFormats) !== null && _b !== void 0 ? _b : [];
+        let url;
+        if (quality === "super") {
+            url = rateFormats
+                .find((_) => _.formatType === "ZQ")
+                .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
+        }
+        else if (quality === "high") {
+            url = rateFormats
+                .find((_) => _.formatType === "SQ")
+                .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
+        }
+        else if (quality === "low") {
+            url = rateFormats
+                .find((_) => _.formatType === "PQ")
+                .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
+        }
+        else {
+            url = rateFormats
+                .find((_) => _.formatType === "HQ")
+                .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
+        }
+        return {
+            artwork,
+            url,
+        };
+    }
+}
 module.exports = {
     platform: "咪咕",
     version: "0.1.1",
@@ -479,35 +560,7 @@ module.exports = {
     primaryKey: ["id", "copyrightId"],
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/migu/index.js",
-    async getMediaSource(musicItem, quality) {
-        if (quality === "standard" && musicItem.url) {
-            return {
-                url: musicItem.url,
-            };
-        }
-        let toneFlag = "HQ";
-        if (quality === "super") {
-            toneFlag = "ZQ";
-        }
-        else if (quality === "high") {
-            toneFlag = "SQ";
-        }
-        else if (quality === "low") {
-            toneFlag = "PQ";
-        }
-        const resource = (await (0, axios_1.default)({
-            url: `https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${musicItem.copyrightId}&toneFlag=${toneFlag}`,
-            headers: {
-                referer: "http://m.music.migu.cn/v3",
-                uid: 123,
-                channel: "0146741",
-            },
-        })).data.data;
-        return {
-            artwork: musicItem.artwork || (resource.songItem.albumImgs[0] || {}).img,
-            url: resource.url,
-        };
-    },
+    getMediaSource,
     async search(query, page, type) {
         if (type === "music") {
             return await searchMusic(query, page);
@@ -571,5 +624,5 @@ module.exports = {
     getTopListDetail,
     getRecommendSheetTags,
     getRecommendSheetsByTag,
-    getMusicSheetInfo
+    getMusicSheetInfo,
 };
