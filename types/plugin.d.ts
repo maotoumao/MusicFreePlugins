@@ -44,7 +44,7 @@ declare namespace IMusicSheet {
     id: string;
     /** 描述 */
     description: string;
-    [k: string]: string | number | undefined;
+    [k: string]: any;
   }
 
   interface IMusicTopListGroupItem {

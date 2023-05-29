@@ -443,9 +443,147 @@ async function getMediaSource(musicItem: IMusic.IMusicItem, quality: IMusic.IQua
   };
 }
 
+const headers = {
+  authority: "music.163.com",
+  "user-agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36",
+  "content-type": "application/x-www-form-urlencoded",
+  accept: "*/*",
+  origin: "https://music.163.com",
+  "sec-fetch-site": "same-origin",
+  "sec-fetch-mode": "cors",
+  "sec-fetch-dest": "empty",
+  referer: "https://music.163.com/",
+  "accept-language": "zh-CN,zh;q=0.9",
+};
+
+/** 推荐歌单tag */
+async function getRecommendSheetTags() {
+  const data = {
+    csrf_token: "",
+  };
+  const pae = getParamsAndEnc(JSON.stringify(data));
+  const paeData = qs.stringify(pae);
+  const res = (
+    await axios({
+      method: "post",
+      url: "https://music.163.com/weapi/playlist/catalogue",
+      headers,
+      data: paeData,
+    })
+  ).data;
+  const cats = res.categories;
+  const map = {};
+  const catData = Object.entries(cats).map(_ => {
+    const tagData = ({
+      title: _[1],
+      data: []
+    });
+    map[_[0]] = tagData;
+    return tagData;
+  })
+  const pinned = [];
+  res.sub.forEach(tag => {
+    const _tag = {
+      id: tag.name,
+      title: tag.name,
+    };
+    if(tag.hot) {
+      pinned.push(_tag);
+    }
+    map[tag.category].data.push(_tag);
+  })
+
+  return {
+    pinned,
+    data: catData
+  }
+}
+
+async function getRecommendSheetsByTag(tag, page: number) {
+  const pageSize = 20;
+  const data = {
+    cat: tag.id || '全部',
+    order:  'hot', // hot,new
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+    total: true,
+    csrf_token: "",
+  };
+  const pae = getParamsAndEnc(JSON.stringify(data));
+  const paeData = qs.stringify(pae);
+  const res = (
+    await axios({
+      method: "post",
+      url: "https://music.163.com/weapi/playlist/list",
+      headers,
+      data: paeData,
+    })
+  ).data;
+  const playLists = res.playlists.map(_ => ({
+    id: _.id,
+    artist: _.creator.nickname,
+    title: _.name,
+    artwork: _.coverImgUrl,
+    playCount: _.playCount,
+    createUserId: _.userId,
+    createTime: _.createTime,
+    description: _.description
+  }));
+  return {
+    isEnd: !(res.more === true),
+    data: playLists
+  };
+}
+
+async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
+  let trackIds = sheet._trackIds;
+
+
+  if(!trackIds) {
+    const id = sheet.id;
+    const headers = {
+      Referer: "https://y.music.163.com/",
+      Origin: "https://y.music.163.com/",
+      authority: "music.163.com",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36",
+    };
+    const sheetDetail = (
+      await axios.get(
+        `https://music.163.com/api/v3/playlist/detail?id=${id}&n=5000`,
+        {
+          headers,
+        }
+      )
+    ).data;
+    trackIds = sheetDetail.playlist.trackIds.map((_) => _.id);
+  }
+  const pageSize = 40;
+  const currentPageIds = trackIds.slice((page - 1) * pageSize, page * pageSize);
+
+  const res = await getValidMusicItems(
+    currentPageIds
+  );
+  let extra = {};
+  if(page <= 1) {
+    extra = {
+      _trackIds: trackIds,
+    }
+  }
+
+  return {
+    isEnd: trackIds.length <= page * pageSize,
+    musicList: res,
+    ...extra
+  }
+}
+
+
+
 module.exports = {
   platform: "网易云",
-  version: "0.1.1",
+  version: "0.1.2",
   appVersion: '>0.1.0-alpha.0',
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
   cacheControl: "no-store",
@@ -475,4 +613,35 @@ module.exports = {
   importMusicSheet,
   getTopLists,
   getTopListDetail,
+  getRecommendSheetTags,
+  getMusicSheetInfo,
+  getRecommendSheetsByTag
 };
+
+
+
+// async function getValidMusicItemsBak(trackIds: Array<number|string>) {
+//   let idsData = {
+//     c:
+//       '[' +
+//       trackIds
+//         .slice(0, 5)
+//         .map((item) => '{"id":' + item + '}')
+//         .join(',') +
+//       ']',
+//   }
+//   const pae = getParamsAndEnc(JSON.stringify(idsData));
+//   const paeData = qs.stringify(pae);
+//   const res = (
+//     await axios({
+//       method: "post",
+//       url: "https://music.163.com/weapi/v3/song/detail",
+//       headers,
+//       data: paeData,
+//     })
+//   ).data;
+
+//   return res.songs.filter(musicCanPlayFilter)
+// }
+
+// g();
