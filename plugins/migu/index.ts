@@ -1,5 +1,6 @@
 import axios from "axios";
 import { load } from "cheerio";
+import CryptoJS = require("crypto-js");
 
 const searchRows = 20;
 
@@ -373,19 +374,19 @@ async function getTopLists() {
     title: "咪咕尖叫榜",
     data: [
       {
-        id: "pathName=jianjiao_newsong&pageNum=1&pageSize=100",
+        id: "jianjiao_newsong",
         title: "尖叫新歌榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/02/36/20020512065402_360x360_2997.png",
       },
       {
-        id: "pathName=jianjiao_hotsong&pageNum=1&pageSize=100",
+        id: "jianjiao_hotsong",
         title: "尖叫热歌榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/04/99/200408163640868_360x360_6587.png",
       },
       {
-        id: "pathName=jianjiao_original&pageNum=1&pageSize=100",
+        id: "jianjiao_original",
         title: "尖叫原创榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/04/99/200408163702795_360x360_1614.png",
@@ -397,49 +398,49 @@ async function getTopLists() {
     title: "咪咕特色榜",
     data: [
       {
-        id: "pathName=movies&pageNum=1&pageSize=100",
+        id: "movies",
         title: "影视榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/05/136/200515161848938_360x360_673.png",
       },
       {
-        id: "pathName=mainland&pageNum=1&pageSize=100",
+        id: "mainland",
         title: "内地榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/08/231/200818095104122_327x327_4971.png",
       },
       {
-        id: "pathName=hktw&pageNum=1&pageSize=100",
+        id: "hktw",
         title: "港台榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/08/231/200818095125191_327x327_2382.png",
       },
       {
-        id: "pathName=eur_usa&pageNum=1&pageSize=100",
+        id: "eur_usa",
         title: "欧美榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/08/231/200818095229556_327x327_1383.png",
       },
       {
-        id: "pathName=jpn_kor&pageNum=1&pageSize=100",
+        id: "jpn_kor",
         title: "日韩榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/08/231/200818095259569_327x327_4628.png",
       },
       {
-        id: "pathName=coloring&pageNum=1&pageSize=100",
+        id: "coloring",
         title: "彩铃榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/08/231/200818095356693_327x327_7955.png",
       },
       {
-        id: "pathName=ktv&pageNum=1&pageSize=100",
+        id: "ktv",
         title: "KTV榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/08/231/200818095414420_327x327_4992.png",
       },
       {
-        id: "pathName=network&pageNum=1&pageSize=100",
+        id: "network",
         title: "网络榜",
         coverImg:
           "https://cdnmusic.migu.cn/tycms_picture/20/08/231/200818095442606_327x327_1298.png",
@@ -450,17 +451,27 @@ async function getTopLists() {
   return [jianjiao, tese];
 }
 
+const UA =
+  "Mozilla/5.0 (Linux; Android 6.0.1; Moto G (4)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Mobile Safari/537.36 Edg/89.0.774.68";
+const By = CryptoJS.MD5(UA).toString();
+
 async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   const res = await axios.get(
-    `https://m.music.migu.cn/migumusic/h5/billboard/home?${topListItem.id}`,
+    `https://m.music.migu.cn/migumusic/h5/billboard/home`,
     {
+      params: {
+        pathName: topListItem.id,
+        pageNum: 1,
+        pageSize: 100
+      },
       headers: {
         Accept: "*/*",
         "Accept-Encoding": "gzip, deflate, br",
         Connection: "keep-alive",
         Host: "m.music.migu.cn",
-        "User-Agent":
-          "Mozilla/5.0 (Linux; Android 6.0.1; Moto G (4)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Mobile Safari/537.36 Edg/89.0.774.68",
+        referer: `https://m.music.migu.cn/v4/music/top/${topListItem.id}`,  
+        "User-Agent": UA,
+        By,
       },
     }
   );
@@ -651,7 +662,7 @@ async function getMediaSource(musicItem, quality) {
 
 module.exports = {
   platform: "咪咕",
-  version: "0.1.1",
+  version: "0.1.2",
   appVersion: ">0.1.0-alpha.0",
   hints: {
     importMusicSheet: [
@@ -745,3 +756,4 @@ module.exports = {
   getRecommendSheetsByTag,
   getMusicSheetInfo,
 };
+ 
