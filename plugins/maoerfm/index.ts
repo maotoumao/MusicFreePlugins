@@ -212,7 +212,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
   ).data.info;
   return {
     isEnd: true,
-    data: res.sounds.filter(validMusicFilter).map(item => ({
+    musicList: res.sounds.filter(validMusicFilter).map(item => ({
       id: item.id,
       title: item.soundstr,
       artwork: item.front_cover,
