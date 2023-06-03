@@ -130,9 +130,101 @@ async function getMediaSource(musicItem, quality: IMusic.IQualityKey) {
   }
 }
 
+async function getRecommendSheetTags() {
+  const res = (
+    await axios.get(
+      `https://www.missevan.com/malbum/recommand`,
+      {
+        headers: {
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61",
+          accept: "application/json",
+          "accept-encoding": "gzip, deflate, br",
+          referer: `https://www.missevan.com`,
+        }
+      }
+    )
+  ).data.info;
+
+  const data = Object.entries(res ?? {}).map(group => ({
+    title: group[0],
+    data: (group[1] as any).map(_ => ({
+      id: _[0],
+      title: _[1]
+    }))
+  }));
+
+  return {
+    data,
+  };
+}
+
+async function getRecommendSheetsByTag(tag, page) {
+  const res = (
+    await axios.get(
+      `https://www.missevan.com/explore/tagalbum`,
+      {
+        headers: {
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61",
+          accept: "application/json",
+          "accept-encoding": "gzip, deflate, br",
+          referer: `https://m.missevan.com`,
+        },
+        params: {
+          order: 0,
+          tid: tag?.id || 0,
+          p: page
+        }
+      }
+    )
+  ).data;
+
+  return {
+    isEnd: res.page >= res.maxpage,
+    data: res.albums.map(sheet => ({
+      id: sheet.id,
+      title: sheet.title,
+      artwork: sheet.front_cover,
+      artist: sheet.username,
+      createUserId: sheet.user_id
+    }))
+  }
+}
+
+async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
+  const res = (
+    await axios.get(
+      `https://www.missevan.com/sound/soundalllist`,
+      {
+        headers: {
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61",
+          accept: "application/json",
+          "accept-encoding": "gzip, deflate, br",
+          referer: `https://m.missevan.com`,
+        },
+        params: {
+          albumid: sheet.id
+        }
+      }
+    )
+  ).data.info;
+  return {
+    isEnd: true,
+    data: res.sounds.filter(validMusicFilter).map(item => ({
+      id: item.id,
+      title: item.soundstr,
+      artwork: item.front_cover,
+      url: item.soundurl,
+      artist: item.username,
+    }))
+  }
+}
+
 module.exports = {
   platform: "猫耳FM",
-  version: "0.1.0",
+  version: "0.1.2",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/maoerfm/index.js",
@@ -147,4 +239,7 @@ module.exports = {
   },
   getMediaSource,
   getAlbumInfo,
+  getRecommendSheetTags,
+  getRecommendSheetsByTag,
+  getMusicSheetInfo
 };
