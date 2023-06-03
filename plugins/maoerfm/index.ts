@@ -243,3 +243,4 @@ module.exports = {
   getRecommendSheetsByTag,
   getMusicSheetInfo
 };
+console.log("hi");
