@@ -290,9 +290,7 @@ async function importMusicSheet(urlLike: string) {
         totalPage = 1;
       }
       musicList = musicList.concat(
-        data.data.musicList
-          .filter((_) => !_.isListenFee)
-          .map(formatMusicItem)
+        data.data.musicList.filter((_) => !_.isListenFee).map(formatMusicItem)
       );
     } catch {}
 
@@ -306,19 +304,110 @@ async function importMusicSheet(urlLike: string) {
   return musicList;
 }
 
+async function getRecommendSheetTags() {
+  const headers = await getHeaders();
+  const res = (
+    await axios.get(
+      `http://www.kuwo.cn/api/www/playlist/getTagList?httpsStatus=1`,
+      {
+        headers,
+      }
+    )
+  ).data.data;
+
+  const data = res.map((group) => ({
+    title: group.name,
+    data: group.data.map((_) => ({
+      id: _.id,
+      title: _.name,
+    })),
+  }));
+
+  const pinned = [
+    {
+      id: "1848",
+      title: "翻唱",
+    },
+    {
+      id: "621",
+      title: "网络",
+    },
+    {
+      title: "伤感",
+      id: "146",
+    },
+    {
+      title: "欧美",
+      id: "35",
+    },
+  ];
+  return {
+    data,
+    pinned,
+  };
+}
+
+async function getRecommendSheetsByTag(tag, page) {
+  const headers = await getHeaders();
+  const pageSize = 20;
+  let res;
+  if (tag.id) {
+    res = (
+      await axios.get(
+        `http://www.kuwo.cn/api/www/classify/playlist/getTagPlayList?pn=${page}&rn=${pageSize}&id=${tag.id}&httpsStatus=1`,
+        {
+          headers,
+        }
+      )
+    ).data.data;
+  } else {
+    res = (
+      await axios.get(
+        `http://www.kuwo.cn/api/www/classify/playlist/getRcmPlayList?pn=${page}&rn=${pageSize}&order=hot&httpsStatus=1`,
+        {
+          headers,
+        }
+      )
+    ).data.data;
+  }
+
+  const isEnd = page * pageSize >= res.total;
+  return {
+    isEnd,
+    data: res.data.map((_) => ({
+      title: _.name,
+      artist: _.uname,
+      id: _.id,
+      artwork: _.img,
+      playCount: _.listencnt,
+      createUserId: _.uid,
+    })),
+  };
+}
+
+async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
+  const res = await getMusicSheetResponseById(sheet.id, page, pageSize);
+  return {
+    isEnd: page * pageSize >= res.data.total,
+    musicList: res.data.musicList
+      .filter((_) => !_.isListenFee)
+      .map(formatMusicItem),
+  };
+}
+
 module.exports = {
   platform: "酷我",
-  version: "0.1.0",
+  version: "0.1.2",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
   cacheControl: "no-cache",
   hints: {
     importMusicSheet: [
-      '酷我APP：自建歌单-分享-复制试听链接，直接粘贴即可',
-      'H5：复制URL并粘贴，或者直接输入纯数字歌单ID即可',
-      '导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待'
-    ]
+      "酷我APP：自建歌单-分享-复制试听链接，直接粘贴即可",
+      "H5：复制URL并粘贴，或者直接输入纯数字歌单ID即可",
+      "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
+    ],
   },
   async search(query, page, type) {
     if (type === "music") {
@@ -366,5 +455,8 @@ module.exports = {
   getArtistWorks,
   getTopLists,
   getTopListDetail,
-  importMusicSheet
+  importMusicSheet,
+  getRecommendSheetTags,
+  getRecommendSheetsByTag,
+  getMusicSheetInfo,
 };

@@ -391,38 +391,47 @@ async function getTopListDetail(topListItem) {
             .map(formatMusicItem) });
 }
 async function getRecommendSheetTags() {
-    const res = (await axios_1.default.get('https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_tag_conf.fcg?format=json&inCharset=utf8&outCharset=utf-8', {
+    const res = (await axios_1.default.get("https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_tag_conf.fcg?format=json&inCharset=utf8&outCharset=utf-8", {
         headers: {
-            referer: 'https://y.qq.com/'
-        }
+            referer: "https://y.qq.com/",
+        },
     })).data.data.categories;
-    const data = res.slice(1).map(_ => ({
+    const data = res.slice(1).map((_) => ({
         title: _.categoryGroupName,
-        data: _.items.map(tag => ({
+        data: _.items.map((tag) => ({
             id: tag.categoryId,
-            title: tag.categoryName
-        }))
+            title: tag.categoryName,
+        })),
     }));
-    return { data };
+    const pinned = [];
+    for (let d of data) {
+        if (d.data.length) {
+            pinned.push(d.data[0]);
+        }
+    }
+    return {
+        pinned,
+        data,
+    };
 }
 async function getRecommendSheetsByTag(tag, page) {
     const pageSize = 20;
-    const rawRes = (await axios_1.default.get('https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg', {
+    const rawRes = (await axios_1.default.get("https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg", {
         headers: {
-            referer: 'https://y.qq.com/'
+            referer: "https://y.qq.com/",
         },
         params: {
-            inCharset: 'utf8',
-            outCharset: 'utf-8',
+            inCharset: "utf8",
+            outCharset: "utf-8",
             sortId: 5,
-            categoryId: (tag === null || tag === void 0 ? void 0 : tag.id) || '10000000',
+            categoryId: (tag === null || tag === void 0 ? void 0 : tag.id) || "10000000",
             sin: pageSize * (page - 1),
-            ein: page * pageSize - 1
-        }
+            ein: page * pageSize - 1,
+        },
     })).data;
     const res = JSON.parse(rawRes.replace(/callback\(|MusicJsonCallback\(|jsonCallback\(|\)$/g, "")).data;
     const isEnd = res.sum <= page * pageSize;
-    const data = res.list.map(item => {
+    const data = res.list.map((item) => {
         var _a, _b;
         return ({
             id: item.dissid,
@@ -431,19 +440,19 @@ async function getRecommendSheetsByTag(tag, page) {
             artwork: item.imgurl,
             description: item.introduction,
             playCount: item.listennum,
-            artist: (_b = (_a = item.creator) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : ''
+            artist: (_b = (_a = item.creator) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : "",
         });
     });
     return {
         isEnd,
-        data
+        data,
     };
 }
 async function getMusicSheetInfo(sheet, page) {
     const data = await importMusicSheet(sheet.id);
     return {
         isEnd: true,
-        musicList: data
+        musicList: data,
     };
 }
 module.exports = {
@@ -506,5 +515,5 @@ module.exports = {
     getTopListDetail,
     getRecommendSheetTags,
     getRecommendSheetsByTag,
-    getMusicSheetInfo
+    getMusicSheetInfo,
 };
