@@ -467,10 +467,70 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   };
 }
 
+async function getRecommendSheetTags() {
+  const res = (await axios.get('https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_tag_conf.fcg?format=json&inCharset=utf8&outCharset=utf-8', {
+      headers: {
+          referer: 'https://y.qq.com/'
+      }
+  })).data.data.categories;
+
+  const data = res.slice(1).map(_ => ({
+      title: _.categoryGroupName,
+      data: _.items.map(tag => ({
+          id: tag.categoryId,
+          title: tag.categoryName
+      }))
+  }));
+
+  return {data};
+}
+
+async function getRecommendSheetsByTag(tag, page){
+  const pageSize = 20;
+  const rawRes = (await axios.get('https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg', {
+      headers: {
+          referer: 'https://y.qq.com/'
+      },
+      params: {
+          inCharset: 'utf8',
+          outCharset: 'utf-8',
+          sortId: 5,
+          categoryId: tag?.id || '10000000',
+          sin: pageSize * (page - 1),
+          ein: page * pageSize - 1
+      }
+  })).data;
+  const res = JSON.parse(
+      rawRes.replace(/callback\(|MusicJsonCallback\(|jsonCallback\(|\)$/g, "")
+    ).data;
+  const isEnd = res.sum <= page * pageSize;
+  const data = res.list.map(item => ({
+      id: item.dissid,
+      createTime: item.createTime,
+      title: item.dissname,
+      artwork: item.imgurl,
+      description: item.introduction,
+      playCount: item.listennum,
+      artist: item.creator?.name ?? ''
+  }))
+  return {
+      isEnd,
+      data
+  }
+}
+
+async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
+  const data = await importMusicSheet(sheet.id);
+  return {
+    isEnd: true,
+    musicList: data
+  }
+}
+
 // 接口参考：https://jsososo.github.io/QQMusicApi/#/
 module.exports = {
   platform: "QQ音乐",
-  version: "0.1.1",
+  version: "0.1.2",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
   cacheControl: "no-cache",
@@ -526,4 +586,8 @@ module.exports = {
   importMusicSheet,
   getTopLists,
   getTopListDetail,
+  getRecommendSheetTags,
+  getRecommendSheetsByTag,
+  getMusicSheetInfo
 };
+
