@@ -549,3 +549,49 @@ module.exports = {
   importMusicSheet,
 };
 
+
+
+getMediaSource({
+  id: 'BV1Pv4y1z7A1',
+  aid: 564165121,
+  bvid: 'BV1Pv4y1z7A1',
+  artist: '无毒的BaCl2',
+  title: '鸡块旋转83天8小时.avi',
+  album: 'BV1Pv4y1z7A1',
+  artwork: 'http://i1.hdslb.com/bfs/archive/24d7f7c53b5d740993eaa67eededa71966cb88c9.jpg',
+  description: '审核大大辛苦了！加油！',
+  duration: 7200000,
+  date: '2022-12-24'
+}, 'standard').then(console.log);
+
+// searchAlbum('周杰伦', 1).then(console.log)
+
+
+// {
+//   url: 'https://xy60x29x234x168xy.mcdn.bilivideo.cn:4483/upgcxcode/01/93/935359301/935359301-1-30232.m4s?e=ig8euxZM2rNcNbdlhoNvNC8BqJIzNbfqXBvEqxTEto8BTrNvN0GvT90W5JZMkX_YN0MvXg8gNEV4NC8xNEV4N03eN0B5tZlqNxTEto8BTrNvNeZVuJ10Kj_g2UB02J0mN0B5tZlqNCNEto8BTrNvNC7MTX502C8f2jmMQJ6mqF2fka1mqx6gqj0eN0B599M=&uipk=5&nbs=1&deadline=1685552083&gen=playurlv2&os=mcdn&oi=1698964255&trid=0000c4b8722cca5a4b88b6ffceabb89e7330u&mid=0&platform=pc&upsig=5317110e9e7617d7a04a47fb15f3bd87&uparams=e,uipk,nbs,deadline,gen,os,oi,trid,mid,platform&mcdnid=1003026&bvc=vod&nettype=0&orderid=0,3&buvid=&build=0&agrr=1&bw=13831&logo=A0000001',
+//   headers: {
+//     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63',
+//     accept: '*/*',
+//     host: 'xy60x29x234x168xy.mcdn.bilivideo.cn:4483',
+//     'accept-encoding': 'gzip, deflate, br',
+//     connection: 'keep-alive',
+//     referer: 'https://www.bilibili.com/video/BV1Pv4y1z7A1'
+//   }
+// }
+
+// getMediaSource( {
+//   id: 'BV1r7411p7R4',
+//   aid: 86670567,
+//   bvid: 'BV1r7411p7R4',
+//   artist: 'zyl2012',
+//   title: '【4K修复】周杰伦 - 青花瓷MV 2160P修复版 经典中国风',
+//   album: 'BV1r7411p7R4',
+//   artwork: 'http://i2.hdslb.com/bfs/archive/d6d5176730f19c23e03d3304c7bd30041024d5d8.jpg',
+//   description: '转载自我自己修复\n' +
+//     'DVD修复伪1080P，修复仅为提升观感\n' +
+//     '---------------------\n' +
+//     '2021.4.9\n' +
+//     '重新修复伪4K，修复仅为提升观感',
+//   duration: 242,
+//   date: '2020-02-04'
+// }, 'standard').then(console.log)

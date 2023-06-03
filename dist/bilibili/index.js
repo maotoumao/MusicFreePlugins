@@ -455,3 +455,15 @@ module.exports = {
     getTopListDetail,
     importMusicSheet,
 };
+getMediaSource({
+    id: 'BV1Pv4y1z7A1',
+    aid: 564165121,
+    bvid: 'BV1Pv4y1z7A1',
+    artist: '无毒的BaCl2',
+    title: '鸡块旋转83天8小时.avi',
+    album: 'BV1Pv4y1z7A1',
+    artwork: 'http://i1.hdslb.com/bfs/archive/24d7f7c53b5d740993eaa67eededa71966cb88c9.jpg',
+    description: '审核大大辛苦了！加油！',
+    duration: 7200000,
+    date: '2022-12-24'
+}, 'standard').then(console.log);
