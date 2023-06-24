@@ -50,12 +50,14 @@ const searchHeaders = {
 };
 async function getCookie() {
     if (!cookie) {
-        cookie = await axios_1.default.get("https://api.bilibili.com/x/frontend/finger/spi", {
-            headers: searchHeaders,
-        });
+        cookie = (await axios_1.default.get("https://api.bilibili.com/x/frontend/finger/spi", {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/114.0.0.0",
+            },
+        })).data.data;
     }
 }
-const pageSize = 30;
+const pageSize = 20;
 async function searchBase(keyword, page, searchType) {
     await getCookie();
     const params = {
@@ -88,10 +90,10 @@ async function getFavoriteList(id) {
     let page = 1;
     while (true) {
         try {
-            const { data: { data: { medias, has_more } } } = await axios_1.default.get('https://api.bilibili.com/x/v3/fav/resource/list', {
+            const { data: { data: { medias, has_more }, }, } = await axios_1.default.get("https://api.bilibili.com/x/v3/fav/resource/list", {
                 params: {
                     media_id: id,
-                    platform: 'web',
+                    platform: "web",
                     ps: pageSize,
                     pn: page,
                 },
@@ -152,10 +154,30 @@ async function searchArtist(keyword, page) {
 }
 function getMixinKey(e) {
     var t = [];
-    return [46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 34, 44, 52].forEach((function (r) {
+    return ([
+        46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5,
+        49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55,
+        40, 61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57,
+        62, 11, 36, 20, 34, 44, 52,
+    ].forEach(function (r) {
         e.charAt(r) && t.push(e.charAt(r));
-    })),
-        t.join("").slice(0, 32);
+    }),
+        t.join("").slice(0, 32));
+}
+function getRid(params) {
+    const npi = "4a1d4479a1ea4146bc7552eea71c28e9fa5812e23a204d10b332dc24d992432d";
+    const o = getMixinKey(npi);
+    const l = Object.keys(params).sort();
+    let c = [];
+    for (let d = 0, u = /[!'\(\)*]/g; d < l.length; ++d) {
+        let [h, p] = [l[d], params[l[d]]];
+        p && "string" == typeof p && (p = p.replace(u, "")),
+            null != p &&
+                c.push("".concat(encodeURIComponent(h), "=").concat(encodeURIComponent(p)));
+    }
+    const f = c.join("&");
+    const w_rid = CryptoJs.MD5(f + o).toString();
+    return w_rid;
 }
 async function getArtistWorks(artistItem, page, type) {
     const queryHeaders = {
@@ -179,20 +201,10 @@ async function getArtistWorks(artistItem, page, type) {
         web_location: 1550101,
         order_avoided: true,
         order: "pubdate",
-        platform: 'web',
+        platform: "web",
         wts: now.toString(),
     };
-    const npi = "4a1d4479a1ea4146bc7552eea71c28e9fa5812e23a204d10b332dc24d992432d";
-    const o = getMixinKey(npi);
-    const l = Object.keys(params).sort();
-    let c = [];
-    for (let d = 0, u = /[!'\(\)*]/g; d < l.length; ++d) {
-        let [h, p] = [l[d], params[l[d]]];
-        p && "string" == typeof p && (p = p.replace(u, "")),
-            null != p && c.push("".concat(encodeURIComponent(h), "=").concat(encodeURIComponent(p)));
-    }
-    const f = c.join("&");
-    const w_rid = CryptoJs.MD5(f + o).toString();
+    const w_rid = getRid(params);
     const res = (await axios_1.default.get("https://api.bilibili.com/x/space/wbi/arc/search", {
         headers: Object.assign(Object.assign({}, queryHeaders), { cookie: `buvid3=${cookie.b_3};buvid4=${cookie.b_4}` }),
         params: Object.assign(Object.assign({}, params), { w_rid }),
@@ -392,7 +404,7 @@ async function importMusicSheet(urlLike) {
         return;
     }
     const musicSheet = await getFavoriteList(id);
-    return musicSheet.map(_ => {
+    return musicSheet.map((_) => {
         var _a, _b;
         return ({
             id: _.id,
@@ -409,18 +421,18 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.5",
+    version: "0.1.6",
     defaultSearchType: "album",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
     primaryKey: ["id", "aid", "bvid", "cid"],
     hints: {
         importMusicSheet: [
-            'bilibili 移动端：APP点击我的，空间，右上角分享，复制链接，浏览器打开切换桌面版网站，点击播放全部视频，复制链接',
-            'bilibili H5/PC端：复制收藏夹URL，或者直接输入ID即可',
-            '非公开收藏夹无法导入，编辑收藏夹改为公开即可',
-            '导入时间和歌单大小有关，请耐心等待'
-        ]
+            "bilibili 移动端：APP点击我的，空间，右上角分享，复制链接，浏览器打开切换桌面版网站，点击播放全部视频，复制链接",
+            "bilibili H5/PC端：复制收藏夹URL，或者直接输入ID即可",
+            "非公开收藏夹无法导入，编辑收藏夹改为公开即可",
+            "导入时间和歌单大小有关，请耐心等待",
+        ],
     },
     async search(keyword, page, type) {
         if (type === "album" || type === "music") {
@@ -455,15 +467,3 @@ module.exports = {
     getTopListDetail,
     importMusicSheet,
 };
-getMediaSource({
-    id: 'BV1Pv4y1z7A1',
-    aid: 564165121,
-    bvid: 'BV1Pv4y1z7A1',
-    artist: '无毒的BaCl2',
-    title: '鸡块旋转83天8小时.avi',
-    album: 'BV1Pv4y1z7A1',
-    artwork: 'http://i1.hdslb.com/bfs/archive/24d7f7c53b5d740993eaa67eededa71966cb88c9.jpg',
-    description: '审核大大辛苦了！加油！',
-    duration: 7200000,
-    date: '2022-12-24'
-}, 'standard').then(console.log);

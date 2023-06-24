@@ -115,6 +115,35 @@ async function searchArtist(query, page) {
   };
 }
 
+async function searchMusicSheet(query, page) {
+  const headers = await getHeaders();
+  const res = (
+    await axios.get("http://www.kuwo.cn/api/www/search/searchPlayListBykeyWord", {
+      headers,
+      params: {
+        key: query,
+        pn: page,
+        rn: pageSize,
+        httpStatus: 1,
+      },
+    })
+  ).data;
+
+  const musicSheet = res.data.list.map((_) => ({
+    title: he.decode(_.name),
+    artist: _.uname,
+    id: _.id,
+    playCount: _.listencnt,
+    artwork: _.img,
+    worksNum: _.total,
+  }));
+
+  return {
+    isEnd: res.data.total <= page * pageSize,
+    data: musicSheet,
+  };
+}
+
 async function getArtistMusicWorks(artistItem, page) {
   const headers = await getHeaders();
   const res = (
@@ -397,7 +426,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 
 module.exports = {
   platform: "酷我",
-  version: "0.1.2",
+  version: "0.1.3",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
@@ -418,6 +447,9 @@ module.exports = {
     }
     if (type === "artist") {
       return await searchArtist(query, page);
+    }
+    if (type === "sheet") {
+      return await searchMusicSheet(query, page);
     }
   },
   async getMediaSource(musicItem, quality: IMusic.IQualityKey) {
@@ -460,3 +492,4 @@ module.exports = {
   getRecommendSheetsByTag,
   getMusicSheetInfo,
 };
+

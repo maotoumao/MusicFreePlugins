@@ -255,7 +255,7 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
     "accept-encoding": "gzip, deflate, br",
     "accept-language": "zh-CN,zh;q=0.9",
   };
-  const res = await axios.get(" https://music.91q.com/v1/bd/list", {
+  const res = await axios.get("https://music.91q.com/v1/bd/list", {
     headers,
     params: getSignedParams({
       bdid: topListItem.id,
@@ -268,9 +268,129 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   }
 }
 
+// /** 推荐歌单tag */
+// async function getRecommendSheetTags() {
+
+//   const params = getSignedParams({
+//     timestamp: Date.now(),
+//     appid: "16073360"
+//   });
+//   const headers = {
+//     "user-agent":
+//       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
+//     referer: `https://music.91q.com`,
+//     from: "web",
+//     accept: "application/json, text/plain, */*",
+//     "accept-encoding": "gzip, deflate, br",
+//     "accept-language": "zh-CN,zh;q=0.9",
+//   };
+//   const res = (await axios.get("https://music.91q.com/v1/tracklist/category", {
+//     headers,
+//     params: params,
+//   })).data;
+//   const cats = res.data;
+//   const catData = cats.map(_ => {
+//     const tagData = ({
+//       title: _.categoryName,
+//       id:_.id,
+//       data: _.subCate.map(item => ({
+//         id: item.id,
+//         title: item.categoryName
+//       }))
+//     }); 
+//     return tagData;
+//   })
+//   const pinned = [];
+
+
+//   return {
+//     pinned,
+//     data: catData
+//   }
+// }
+
+// async function getRecommendSheetsByTag(tag, page: number) {
+//   const pageSize = 20;
+//   const data = {
+//     cat: tag.id || '全部',
+//     order:  'hot', // hot,new
+//     limit: pageSize,
+//     offset: (page - 1) * pageSize,
+//     total: true,
+//     csrf_token: "",
+//   };
+//   const pae = getParamsAndEnc(JSON.stringify(data));
+//   const paeData = qs.stringify(pae);
+//   const res = (
+//     await axios({
+//       method: "post",
+//       url: "https://music.163.com/weapi/playlist/list",
+//       headers,
+//       data: paeData,
+//     })
+//   ).data;
+//   const playLists = res.playlists.map(_ => ({
+//     id: _.id,
+//     artist: _.creator.nickname,
+//     title: _.name,
+//     artwork: _.coverImgUrl,
+//     playCount: _.playCount,
+//     createUserId: _.userId,
+//     createTime: _.createTime,
+//     description: _.description
+//   }));
+//   return {
+//     isEnd: !(res.more === true),
+//     data: playLists
+//   };
+// }
+
+// async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
+//   let trackIds = sheet._trackIds;
+
+
+//   if(!trackIds) {
+//     const id = sheet.id;
+//     const headers = {
+//       Referer: "https://y.music.163.com/",
+//       Origin: "https://y.music.163.com/",
+//       authority: "music.163.com",
+//       "User-Agent":
+//         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36",
+//     };
+//     const sheetDetail = (
+//       await axios.get(
+//         `https://music.163.com/api/v3/playlist/detail?id=${id}&n=5000`,
+//         {
+//           headers,
+//         }
+//       )
+//     ).data;
+//     trackIds = sheetDetail.playlist.trackIds.map((_) => _.id);
+//   }
+//   const pageSize = 40;
+//   const currentPageIds = trackIds.slice((page - 1) * pageSize, page * pageSize);
+
+//   const res = await getValidMusicItems(
+//     currentPageIds
+//   );
+//   let extra = {};
+//   if(page <= 1) {
+//     extra = {
+//       _trackIds: trackIds,
+//     }
+//   }
+
+//   return {
+//     isEnd: trackIds.length <= page * pageSize,
+//     musicList: res,
+//     ...extra
+//   }
+// }
+
 module.exports = {
   platform: "千千音乐",
-  version: "0.1.0",
+  version: "0.1.1",
   srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qianqian/index.js",
   cacheControl: "no-cache",
   async search(query, page, type) {

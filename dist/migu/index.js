@@ -77,6 +77,22 @@ async function searchArtist(query, page) {
         data: artists,
     };
 }
+async function searchMusicSheet(query, page) {
+    const data = await searchBase(query, page, 6);
+    const musicsheet = data.songLists.map((result) => ({
+        title: result.name,
+        id: result.id,
+        artist: result.userName,
+        artwork: result.img,
+        description: result.intro,
+        worksNum: result.musicNum,
+        playCount: result.playNum
+    }));
+    return {
+        isEnd: +data.pageNo * searchRows >= data.pgt,
+        data: musicsheet,
+    };
+}
 async function getArtistAlbumWorks(artistItem, page) {
     const headers = {
         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -558,7 +574,7 @@ async function getMediaSource(musicItem, quality) {
 }
 module.exports = {
     platform: "咪咕",
-    version: "0.1.2",
+    version: "0.1.3",
     appVersion: ">0.1.0-alpha.0",
     hints: {
         importMusicSheet: [
@@ -580,6 +596,9 @@ module.exports = {
         }
         if (type === "artist") {
             return await searchArtist(query, page);
+        }
+        if (type === "sheet") {
+            return await searchMusicSheet(query, page);
         }
     },
     async getAlbumInfo(albumItem) {

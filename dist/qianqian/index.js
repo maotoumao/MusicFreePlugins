@@ -210,7 +210,7 @@ async function getTopListDetail(topListItem) {
         "accept-encoding": "gzip, deflate, br",
         "accept-language": "zh-CN,zh;q=0.9",
     };
-    const res = await axios_1.default.get(" https://music.91q.com/v1/bd/list", {
+    const res = await axios_1.default.get("https://music.91q.com/v1/bd/list", {
         headers,
         params: getSignedParams({
             bdid: topListItem.id,
@@ -221,7 +221,7 @@ async function getTopListDetail(topListItem) {
 }
 module.exports = {
     platform: "千千音乐",
-    version: "0.1.0",
+    version: "0.1.1",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qianqian/index.js",
     cacheControl: "no-cache",
     async search(query, page, type) {

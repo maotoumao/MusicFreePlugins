@@ -125,6 +125,24 @@ async function searchArtist(query, page) {
     data: artists.data.map(formatArtistItem),
   };
 }
+async function searchMusicSheet(query, page) {
+  const musicSheet = await searchBase(query, page, 3);
+
+  return {
+    isEnd: musicSheet.isEnd,
+    data: musicSheet.data.map(item => ({
+      title: item.dissname,
+      createAt: item.createtime,
+      description: item.introduction,
+      playCount: item.listennum,
+      worksNums: item.song_count,
+      artwork: item.imgurl,
+      id: item.dissid,
+      artist: item.creator.name
+    })),
+  };
+}
+
 
 function getQueryFromUrl(key, search) {
   try {
@@ -417,7 +435,6 @@ async function importMusicSheet(urlLike) {
   const res = JSON.parse(
     result.replace(/callback\(|MusicJsonCallback\(|jsonCallback\(|\)$/g, "")
   );
-  console.log(res);
   return res.cdlist[0].songlist.filter(validSongFilter).map(formatMusicItem);
 }
 
@@ -550,7 +567,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 // 接口参考：https://jsososo.github.io/QQMusicApi/#/
 module.exports = {
   platform: "QQ音乐",
-  version: "0.1.2",
+  version: "0.1.3",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
   cacheControl: "no-cache",
@@ -570,6 +587,9 @@ module.exports = {
     }
     if (type === "artist") {
       return await searchArtist(query, page);
+    }
+    if (type === "sheet") {
+      return await searchMusicSheet(query, page);
     }
   },
   async getMediaSource(musicItem, quality: IMusic.IQualityKey) {

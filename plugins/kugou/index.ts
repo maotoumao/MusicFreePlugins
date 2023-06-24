@@ -112,6 +112,37 @@ async function searchAlbum(query, page) {
   };
 }
 
+async function searchMusicSheet(query, page) {
+  const res = (
+    await axios.get("http://mobilecdn.kugou.com/api/v3/search/special", {
+      headers,
+      params: {
+        format: "json",
+        keyword: query,
+        page,
+        pagesize: pageSize,
+        showtype: 1,
+      },
+    })
+  ).data;
+  const sheets = res.data.info.map(item => ({
+    title: item.specialname,
+    createAt: item.publishtime,
+    description: item.intro,
+    artist: item.nickname,
+    coverImg: item.imgurl,
+    gid: item.gid,
+    playCount: item.playcount,
+    id: item.specialid,
+    worksNum: item.songcount
+  }));
+  return {
+    isEnd: page * pageSize >= res.data.total,
+    data: sheets,
+  };
+}
+
+
 async function getMediaSource(musicItem, quality: IMusic.IQualityKey) {
   let hash;
   if (quality === "low") {
@@ -364,7 +395,7 @@ async function importMusicSheet(urlLike: string) {
 
 module.exports = {
   platform: "酷狗",
-  version: "0.1.2",
+  version: "0.1.3",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kugou/index.js",
@@ -381,6 +412,8 @@ module.exports = {
       return await searchMusic(query, page);
     } else if (type === "album") {
       return await searchAlbum(query, page);
+    } else if (type === "sheet") {
+      return await searchMusicSheet(query, page);
     }
   },
   getMediaSource,
@@ -388,5 +421,5 @@ module.exports = {
   getTopLists,
   getTopListDetail,
   getAlbumInfo,
-  importMusicSheet
+  importMusicSheet,
 };

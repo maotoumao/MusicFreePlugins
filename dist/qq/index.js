@@ -107,6 +107,22 @@ async function searchArtist(query, page) {
         data: artists.data.map(formatArtistItem),
     };
 }
+async function searchMusicSheet(query, page) {
+    const musicSheet = await searchBase(query, page, 3);
+    return {
+        isEnd: musicSheet.isEnd,
+        data: musicSheet.data.map(item => ({
+            title: item.dissname,
+            createAt: item.createtime,
+            description: item.introduction,
+            playCount: item.listennum,
+            worksNums: item.song_count,
+            artwork: item.imgurl,
+            id: item.dissid,
+            artist: item.creator.name
+        })),
+    };
+}
 function getQueryFromUrl(key, search) {
     try {
         const sArr = search.split("?");
@@ -351,7 +367,6 @@ async function importMusicSheet(urlLike) {
         withCredentials: true,
     })).data;
     const res = JSON.parse(result.replace(/callback\(|MusicJsonCallback\(|jsonCallback\(|\)$/g, ""));
-    console.log(res);
     return res.cdlist[0].songlist.filter(validSongFilter).map(formatMusicItem);
 }
 async function getTopLists() {
@@ -457,7 +472,7 @@ async function getMusicSheetInfo(sheet, page) {
 }
 module.exports = {
     platform: "QQ音乐",
-    version: "0.1.2",
+    version: "0.1.3",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
     cacheControl: "no-cache",
     hints: {
@@ -476,6 +491,9 @@ module.exports = {
         }
         if (type === "artist") {
             return await searchArtist(query, page);
+        }
+        if (type === "sheet") {
+            return await searchMusicSheet(query, page);
         }
     },
     async getMediaSource(musicItem, quality) {

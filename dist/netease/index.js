@@ -145,6 +145,25 @@ async function searchArtist(query, page) {
         data: artists,
     };
 }
+async function searchMusicSheet(query, page) {
+    const res = await searchBase(query, page, 1000);
+    const playlists = res.result.playlists.map((_) => {
+        var _a;
+        return ({
+            title: _.name,
+            id: _.id,
+            coverImg: _.coverImgUrl,
+            artist: (_a = _.creator) === null || _a === void 0 ? void 0 : _a.nickname,
+            playCount: _.playCount,
+            worksNum: _.trackCount
+        });
+    });
+    return {
+        isEnd: res.result.playlistCount <= page * pageSize,
+        data: playlists,
+    };
+}
+searchMusicSheet("孤勇者", 1);
 async function getArtistWorks(artistItem, page, type) {
     const data = {
         csrf_token: "",
@@ -491,6 +510,9 @@ module.exports = {
         }
         if (type === "artist") {
             return await searchArtist(query, page);
+        }
+        if (type === "sheet") {
+            return await searchMusicSheet(query, page);
         }
     },
     getMediaSource,
