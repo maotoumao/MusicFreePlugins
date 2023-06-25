@@ -3,11 +3,13 @@ type WithMusicList<T> = T & {
 };
 
 declare namespace ICommon {
-  export type SupportMediaType = "music" | "album" | "artist";
+  export type SupportMediaType = "music" | "album" | "artist" | 'sheet';
   export type SupportMediaItemBase = {
     music: Partial<IMusic.IMusicItem>;
     album: Partial<IAlbum.IAlbumItem>;
     artist: Partial<IArtist.IArtistItem>;
+    sheet: Partial<IMusicSheet.IMusicSheetItem>;
+
   };
   export type IMediaBase = {
     id: string;

@@ -108,7 +108,7 @@ async function search(query, page, type) {
     else if (type === "album") {
         return searchAlbum(query, page);
     }
-    else {
+    else if (type === 'sheet') {
         return searchArtist(query, page);
     }
 }
@@ -162,7 +162,7 @@ async function getArtistWorks(artistItem, page, type) {
 }
 module.exports = {
     platform: "喜马拉雅",
-    version: "0.1.1",
+    version: "0.1.2",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/xmly/index.js",
     cacheControl: "no-cache",
     search,
