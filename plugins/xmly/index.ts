@@ -117,7 +117,7 @@ async function search(query, page, type: ICommon.SupportMediaType) {
     return searchMusic(query, page);
   } else if (type === "album") {
     return searchAlbum(query, page);
-  } else if(type === 'sheet') {
+  } else if(type === 'artist') {
     return searchArtist(query, page);
   }
 }
