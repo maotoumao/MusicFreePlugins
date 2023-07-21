@@ -5,22 +5,69 @@ const he = require("he");
 const cookies_1 = require("@react-native-cookies/cookies");
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const pageSize = 30;
-function getRandomCsrf() {
-    return Array(11)
-        .fill(0)
-        .map((_) => alphabet[Math.floor(Math.random() * 36)])
-        .join("");
+function h(t, e) {
+    if (null == e || e.length <= 0)
+        return (console.log("Please enter a password with which to encrypt the message."),
+            null);
+    for (var n = "", i = 0; i < e.length; i++)
+        n += e.charCodeAt(i).toString();
+    var r = Math.floor(n.length / 5), o = parseInt(n.charAt(r) +
+        n.charAt(2 * r) +
+        n.charAt(3 * r) +
+        n.charAt(4 * r) +
+        n.charAt(5 * r)), l = Math.ceil(e.length / 2), c = Math.pow(2, 31) - 1;
+    if (o < 2)
+        return (console.log("Algorithm cannot find a suitable hash. Please choose a different password. \nPossible considerations are to choose a more complex or longer password."),
+            null);
+    var d = Math.round(1e9 * Math.random()) % 1e8;
+    for (n += d; n.length > 10;)
+        n = (parseInt(n.substring(0, 10)) + parseInt(n.substring(10, n.length))).toString();
+    n = (o * n + l) % c;
+    var h = "", f = "";
+    for (i = 0; i < t.length; i++)
+        (f +=
+            (h = parseInt((t.charCodeAt(i) ^ Math.floor((n / c) * 255)))) < 16
+                ? "0" + h.toString(16)
+                : h.toString(16)),
+            (n = (o * n + l) % c);
+    for (d = d.toString(16); d.length < 8;)
+        d = "0" + d;
+    return (f += d);
+}
+const f = "Hm_Iuvt_cdb524f42f0ce19b169b8072123a4727";
+function v(t, cookie) {
+    var e = cookie, n = e.indexOf(t + "=");
+    if (-1 != n) {
+        n = n + t.length + 1;
+        var r = e.indexOf(";", n);
+        return -1 == r && (r = e.length), unescape(e.substring(n, r));
+    }
+    return null;
+}
+function getSecret(cookie) {
+    return h(v(f, cookie), f);
 }
 async function getHeaders() {
-    var _a, _b, _c;
+    console.log("HEADERS");
+    const now = (Date.now() / 1000).toFixed(0);
+    await cookies_1.default.set('http://www.kuwo.cn', {
+        name: 'Hm_lvt_cdb524f42f0ce19b169a8071123a4797',
+        value: now
+    });
+    await cookies_1.default.set('http://www.kuwo.cn', {
+        name: 'Hm_Iuvt_cdb524f42f0ce19b169b8072123a4727',
+        value: '8Z2aWGM4t3CKjDH8d8wTJP7mQ4hhCkid'
+    });
     await cookies_1.default.flush();
-    const csrfToken = (_c = (_b = (_a = (await cookies_1.default.get("www.kuwo.cn"))) === null || _a === void 0 ? void 0 : _a.kw_token) === null || _b === void 0 ? void 0 : _b.value) !== null && _c !== void 0 ? _c : getRandomCsrf();
+    const cookieString = `Hm_lvt_cdb524f42f0ce19b169a8071123a4797=${now}; Hm_Iuvt_cdb524f42f0ce19b169b8072123a4727=8Z2aWGM4t3CKjDH8d8wTJP7mQ4hhCkid`;
+    const secret = getSecret(cookieString);
+    console.log("FUCK", cookieString, secret);
     return {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
         accept: "application/json, text/plain, */*",
         "accept-encoding": "gzip, deflate, br",
-        csrf: csrfToken,
-        cookie: `kw_token=${csrfToken}`,
+        Secret: secret,
+        cookie: cookieString,
         referer: "http://www.kuwo.cn/",
         host: "www.kuwo.cn",
         "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
@@ -49,8 +96,14 @@ async function searchMusic(query, page) {
     const headers = await getHeaders();
     const res = await (0, axios_1.default)({
         method: "get",
-        url: `http://www.kuwo.cn/api/www/search/searchMusicBykeyWord?key=${query}&pn=${page}&rn=${pageSize}&httpStatus=1`,
+        url: `http://www.kuwo.cn/api/www/search/searchMusicBykeyWord`,
         headers,
+        params: {
+            key: query,
+            pn: page,
+            rn: pageSize,
+            httpStatus: 1
+        }
     });
     const songs = res.data.data.list
         .filter((_) => !_.isListenFee)
@@ -219,15 +272,27 @@ async function getTopLists() {
 }
 async function getTopListDetail(topListItem) {
     const headers = await getHeaders();
-    const res = await axios_1.default.get(`http://www.kuwo.cn/api/www/bang/bang/musicList?bangId=${topListItem.id}&pn=1&rn=30&httpsStatus=1`, {
+    const res = await axios_1.default.get(`http://www.kuwo.cn/api/www/bang/bang/musicList`, {
         headers,
+        params: {
+            bangId: topListItem.id,
+            pn: 1,
+            rn: 30,
+            httpStatus: 1
+        }
     });
     return Object.assign(Object.assign({}, topListItem), { musicList: res.data.data.musicList.map(formatMusicItem) });
 }
 async function getMusicSheetResponseById(id, page, pagesize = 50) {
     const headers = await getHeaders();
-    return (await axios_1.default.get(`http://www.kuwo.cn/api/www/playlist/playListInfo?pid=${id}&pn=${page}&rn=${pagesize}&httpsStatus=1`, {
+    return (await axios_1.default.get(`http://www.kuwo.cn/api/www/playlist/playListInfo`, {
         headers,
+        params: {
+            pid: id,
+            pn: page,
+            rn: pagesize,
+            httpStatus: 1
+        }
     })).data;
 }
 async function importMusicSheet(urlLike) {
@@ -340,7 +405,7 @@ async function getMusicSheetInfo(sheet, page) {
 }
 module.exports = {
     platform: "酷我",
-    version: "0.1.3",
+    version: "0.1.4-alpha.5",
     appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
     cacheControl: "no-cache",
