@@ -567,7 +567,6 @@ module.exports = {
     // const headers = await getHeaders();
     const res = (
       await axios.get("http://www.kuwo.cn/api/v1/www/music/playUrl", {
-        headers,
         params: {
           mid: musicItem.id,
           type: "music",
