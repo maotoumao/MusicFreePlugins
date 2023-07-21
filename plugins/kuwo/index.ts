@@ -78,9 +78,11 @@ async function searchMusic(query, page) {
         rn: pageSize,
         rformat: "json",
         encoding: "utf8",
+        pcjson: 1,
       },
     })
   ).data;
+
   const songs = res.abslist.filter(musicListFilter).map(formatMusicItem);
 
   return {
@@ -103,9 +105,11 @@ async function searchAlbum(query, page) {
         rn: pageSize,
         rformat: "json",
         encoding: "utf8",
+        pcjson: 1,
       },
     })
   ).data;
+
   const albums = res.albumlist.map(formatAlbumItem);
 
   return {
@@ -128,6 +132,7 @@ async function searchArtist(query, page) {
         rn: pageSize,
         rformat: "json",
         encoding: "utf8",
+        pcjson: 1,
       },
     })
   ).data;
@@ -153,9 +158,11 @@ async function searchMusicSheet(query, page) {
         rn: pageSize,
         rformat: "json",
         encoding: "utf8",
+        pcjson: 1,
       },
     })
   ).data;
+
   const musicSheets = res.abslist.map(formatMusicSheet);
 
   return {
@@ -188,6 +195,7 @@ async function getArtistMusicWorks(artistItem, page) {
       },
     })
   ).data;
+
   const songs = res.musiclist.filter(musicListFilter).map((_) => {
     return {
       id: _.musicrid,
@@ -231,6 +239,7 @@ async function getArtistAlbumWorks(artistItem, page) {
       },
     })
   ).data;
+
   const albums = res.albumlist.filter(musicListFilter).map(formatAlbumItem);
 
   return {
@@ -286,6 +295,7 @@ async function getAlbumInfo(albumItem) {
       },
     })
   ).data;
+
   const songs = res.musiclist.filter(musicListFilter).map((_) => {
     return {
       id: _.id,
@@ -338,7 +348,7 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   });
   return {
     ...topListItem,
-    musicList: res.data.musicList.map((_) => {
+    musicList: res.data.musiclist.map((_) => {
       return {
         id: _.id,
         // artwork: albumItem.artwork ?? res.img,
@@ -429,16 +439,18 @@ async function getRecommendSheetTags() {
     await axios.get(
       `http://wapi.kuwo.cn/api/pc/classify/playlist/getTagList?cmd=rcm_keyword_playlist&user=0&prod=kwplayer_pc_9.0.5.0&vipver=9.0.5.0&source=kwplayer_pc_9.0.5.0&loginUid=0&loginSid=0&appUid=76039576`
     )
-  ).data.data.data;
+  ).data.data;
 
-  const data = res.map((group) => ({
-    title: group.name,
-    data: group.data.map((_) => ({
-      id: _.id,
-      digest: _.digest,
-      title: _.name,
-    })),
-  }));
+  const data = res
+    .map((group) => ({
+      title: group.name,
+      data: group.data.map((_) => ({
+        id: _.id,
+        digest: _.digest,
+        title: _.name,
+      })),
+    }))
+    .filter((item) => item.data.length);
 
   const pinned = [
     {
@@ -488,8 +500,8 @@ async function getRecommendSheetsByTag(tag, page) {
       ).data;
       res = {
         total: 0,
-        data:  digest43Result.reduce((prev, curr) => [...prev, ...curr.list])
-      }
+        data: digest43Result.reduce((prev, curr) => [...prev, ...curr.list]),
+      };
     }
   } else {
     res = (
@@ -518,16 +530,23 @@ async function getRecommendSheetsByTag(tag, page) {
 async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
   const res = await getMusicSheetResponseById(sheet.id, page, pageSize);
   return {
-    isEnd: page * pageSize >= res.data.total,
-    musicList: res.data.musicList
-      .filter((_) => !_.isListenFee)
-      .map(formatMusicItem),
+    isEnd: page * pageSize >= res.total,
+    musicList: res.musiclist.filter(musicListFilter).map((_) => ({
+      id: _.id,
+      // artwork: albumItem.artwork ?? res.img,
+      title: he.decode(_.name || ""),
+      artist: he.decode(_.artist || ""),
+      album: he.decode(_.album || ""),
+      albumId: _.albumid,
+      artistId: _.artistid,
+      formats: _.formats,
+    })),
   };
 }
 
 module.exports = {
   platform: "酷我",
-  version: "0.1.4-alpha.5",
+  version: "0.1.4-alpha.8",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
@@ -559,10 +578,10 @@ module.exports = {
       br = "128kmp3";
     } else if (quality === "standard") {
       br = "192kmp3";
-    } else if (quality === 'high'){
+    } else if (quality === "high") {
       br = "320kmp3";
     } else {
-      br = 'flac'
+      br = "flac";
     }
     // const headers = await getHeaders();
     const res = (
@@ -590,3 +609,15 @@ module.exports = {
   getRecommendSheetsByTag,
   getMusicSheetInfo,
 };
+
+// getArtistWorks({
+//   id: '2724951'
+// }, 1, 'music').then(console.log)
+
+//
+
+// searchMusic("许嵩", 1).then(console.log);
+
+// getTopListDetail({
+//   id: '93'
+// } as any).then(console.log)
