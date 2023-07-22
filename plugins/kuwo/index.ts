@@ -546,7 +546,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 
 module.exports = {
   platform: "酷我",
-  version: "0.1.4-alpha.8",
+  version: "0.1.4",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
@@ -573,30 +573,35 @@ module.exports = {
     }
   },
   async getMediaSource(musicItem, quality: IMusic.IQualityKey) {
-    let br;
-    if (quality === "low") {
-      br = "128kmp3";
-    } else if (quality === "standard") {
-      br = "192kmp3";
-    } else if (quality === "high") {
-      br = "320kmp3";
-    } else {
-      br = "flac";
+    // let br;
+    // if (quality === "low") {
+    //   br = "128kmp3";
+    // } else if (quality === "standard") {
+    //   br = "192kmp3";
+    // } else if (quality === "high") {
+    //   br = "320kmp3";
+    // } else {
+    //   br = "flac";
+    // }
+    // // const headers = await getHeaders();
+    // const res = (
+    //   await axios.get("http://www.kuwo.cn/api/v1/www/music/playUrl", {
+    //     params: {
+    //       mid: musicItem.id,
+    //       type: "music",
+    //       br,
+    //       httpStatus: 1,
+    //     },
+    //   })
+    // ).data;
+
+    if(quality !== 'standard') {
+      return;
     }
-    // const headers = await getHeaders();
-    const res = (
-      await axios.get("http://www.kuwo.cn/api/v1/www/music/playUrl", {
-        params: {
-          mid: musicItem.id,
-          type: "music",
-          br,
-          httpStatus: 1,
-        },
-      })
-    ).data;
+    const res = (await axios.get(`https://antiserver.kuwo.cn/anti.s?type=convert_url3&rid=${musicItem.id}&format=mp3`)).data;
 
     return {
-      url: res.data.url,
+      url: res.url,
     };
   },
   getAlbumInfo,
@@ -621,3 +626,5 @@ module.exports = {
 // getTopListDetail({
 //   id: '93'
 // } as any).then(console.log)
+
+
