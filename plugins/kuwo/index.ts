@@ -49,6 +49,7 @@ function formatArtistItem(_) {
     name: he.decode(_.ARTIST || ""),
     artistId: _.ARTISTID,
     description: he.decode(_.desc || ""),
+    worksNum: _.SONGNUM
   };
 }
 
@@ -546,7 +547,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 
 module.exports = {
   platform: "酷我",
-  version: "0.1.4",
+  version: "0.1.5",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
