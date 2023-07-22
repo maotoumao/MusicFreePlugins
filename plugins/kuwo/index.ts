@@ -14,7 +14,7 @@ function artworkShort2Long(albumpicShort) {
 }
 
 function musicListFilter(item) {
-  return true;
+  return item?.payInfo?.listen_fragment !== '1';
 }
 
 function formatMusicItem(_) {
@@ -530,6 +530,7 @@ async function getRecommendSheetsByTag(tag, page) {
 
 async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
   const res = await getMusicSheetResponseById(sheet.id, page, pageSize);
+  
   return {
     isEnd: page * pageSize >= res.total,
     musicList: res.musiclist.filter(musicListFilter).map((_) => ({
@@ -629,3 +630,13 @@ module.exports = {
 // } as any).then(console.log)
 
 
+// searchMusicSheet('有何不可', 1).then(console.log);
+// getMusicSheetInfo({
+//   id: '2456538864',
+//   title: '雅俗共赏，有何不可？',
+//   artist: '千古',
+//   artwork: 'http://img1.kwcdn.kuwo.cn/star/userpl2015/22/14/1524926839531_381683822_150.jpg',
+//   playCount: '90025',
+//   description: '因为一首歌爱上一个人，因为一个人爱上一座城……',
+//   worksNum: '23'
+// }, 1)

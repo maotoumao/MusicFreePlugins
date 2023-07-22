@@ -11,7 +11,8 @@ function artworkShort2Long(albumpicShort) {
         : undefined;
 }
 function musicListFilter(item) {
-    return true;
+    var _a;
+    return ((_a = item === null || item === void 0 ? void 0 : item.payInfo) === null || _a === void 0 ? void 0 : _a.listen_fragment) !== '1';
 }
 function formatMusicItem(_) {
     return {
