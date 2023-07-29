@@ -187,7 +187,7 @@ async function searchMusicSheet(query, page) {
     coverImg: _.coverImgUrl,
     artist: _.creator?.nickname,
     playCount: _.playCount,
-    worksNum: _.trackCount
+    worksNum: _.trackCount,
   }));
 
   return {
@@ -310,7 +310,7 @@ async function getAlbumInfo(albumItem) {
   ).data;
 
   return {
-    albumItem: {description: res.album.description},
+    albumItem: { description: res.album.description },
     musicList: (res.songs || [])
       .filter(musicCanPlayFilter)
       .map(formatMusicItem),
@@ -393,9 +393,10 @@ async function getSheetMusicById(id) {
 
 async function importMusicSheet(urlLike) {
   const matchResult = urlLike.match(
-    /(?:https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+))|(?:https?:\/\/music\.163\.com\/playlist\/([0-9]+)\/.*)|(?:https?:\/\/music.163.com\/#\/playlist\?id=(\d+))|(?:^\s*(\d+)\s*$)/
+    /(?:https:\/\/y\.music\.163.com\/m\/playlist\?id=([0-9]+))|(?:https?:\/\/music\.163\.com\/playlist\/([0-9]+)\/.*)|(?:https?:\/\/music.163.com(?:\/#)?\/playlist\?id=(\d+))|(?:^\s*(\d+)\s*$)/
   );
-  const id = matchResult[1] || matchResult[2] || matchResult[3] || matchResult[4];
+  const id =
+    matchResult[1] || matchResult[2] || matchResult[3] || matchResult[4];
   return getSheetMusicById(id);
 }
 
@@ -447,14 +448,17 @@ async function getTopLists() {
 }
 
 const qualityLevels: Record<IMusic.IQualityKey, string> = {
-  low: '',
-  standard: 'standard',
-  high: 'exhigh',
-  super: 'lossless'
-}
+  low: "",
+  standard: "standard",
+  high: "exhigh",
+  super: "lossless",
+};
 /** 获取音乐源 */
-async function getMediaSource(musicItem: IMusic.IMusicItem, quality: IMusic.IQualityKey) {
-  if(quality !== 'standard') {
+async function getMediaSource(
+  musicItem: IMusic.IMusicItem,
+  quality: IMusic.IQualityKey
+) {
+  if (quality !== "standard") {
     return;
   }
   return {
@@ -493,37 +497,37 @@ async function getRecommendSheetTags() {
   ).data;
   const cats = res.categories;
   const map = {};
-  const catData = Object.entries(cats).map(_ => {
-    const tagData = ({
+  const catData = Object.entries(cats).map((_) => {
+    const tagData = {
       title: _[1],
-      data: []
-    });
+      data: [],
+    };
     map[_[0]] = tagData;
     return tagData;
-  })
+  });
   const pinned = [];
-  res.sub.forEach(tag => {
+  res.sub.forEach((tag) => {
     const _tag = {
       id: tag.name,
       title: tag.name,
     };
-    if(tag.hot) {
+    if (tag.hot) {
       pinned.push(_tag);
     }
     map[tag.category].data.push(_tag);
-  })
+  });
 
   return {
     pinned,
-    data: catData
-  }
+    data: catData,
+  };
 }
 
 async function getRecommendSheetsByTag(tag, page: number) {
   const pageSize = 20;
   const data = {
-    cat: tag.id || '全部',
-    order:  'hot', // hot,new
+    cat: tag.id || "全部",
+    order: "hot", // hot,new
     limit: pageSize,
     offset: (page - 1) * pageSize,
     total: true,
@@ -539,7 +543,7 @@ async function getRecommendSheetsByTag(tag, page: number) {
       data: paeData,
     })
   ).data;
-  const playLists = res.playlists.map(_ => ({
+  const playLists = res.playlists.map((_) => ({
     id: _.id,
     artist: _.creator.nickname,
     title: _.name,
@@ -547,19 +551,18 @@ async function getRecommendSheetsByTag(tag, page: number) {
     playCount: _.playCount,
     createUserId: _.userId,
     createTime: _.createTime,
-    description: _.description
+    description: _.description,
   }));
   return {
     isEnd: !(res.more === true),
-    data: playLists
+    data: playLists,
   };
 }
 
 async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
   let trackIds = sheet._trackIds;
 
-
-  if(!trackIds) {
+  if (!trackIds) {
     const id = sheet.id;
     const headers = {
       Referer: "https://y.music.163.com/",
@@ -581,38 +584,35 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
   const pageSize = 40;
   const currentPageIds = trackIds.slice((page - 1) * pageSize, page * pageSize);
 
-  const res = await getValidMusicItems(
-    currentPageIds
-  );
+  const res = await getValidMusicItems(currentPageIds);
   let extra = {};
-  if(page <= 1) {
+  if (page <= 1) {
     extra = {
       _trackIds: trackIds,
-    }
+    };
   }
 
   return {
     isEnd: trackIds.length <= page * pageSize,
     musicList: res,
-    ...extra
-  }
+    ...extra,
+  };
 }
-
-
 
 module.exports = {
   platform: "网易云",
-  version: "0.1.2",
-  appVersion: '>0.1.0-alpha.0',
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
+  version: "0.1.3",
+  appVersion: ">0.1.0-alpha.0",
+  srcUrl:
+    "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
   cacheControl: "no-store",
   hints: {
     importMusicSheet: [
-      '网易云移动端：APP点击分享，然后复制链接',
-      '网易云H5/PC端：复制URL，或者直接输入歌单ID即可',
-      '默认歌单无法导入，先新建一个空白歌单复制过去再导入新歌单即可',
-      '导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待'
-    ]
+      "网易云移动端：APP点击分享，然后复制链接",
+      "网易云H5/PC端：复制URL，或者直接输入歌单ID即可",
+      "默认歌单无法导入，先新建一个空白歌单复制过去再导入新歌单即可",
+      "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
+    ],
   },
   async search(query, page, type) {
     if (type === "music") {
@@ -637,10 +637,8 @@ module.exports = {
   getTopListDetail,
   getRecommendSheetTags,
   getMusicSheetInfo,
-  getRecommendSheetsByTag
+  getRecommendSheetsByTag,
 };
-
-
 
 // async function getValidMusicItemsBak(trackIds: Array<number|string>) {
 //   let idsData = {
