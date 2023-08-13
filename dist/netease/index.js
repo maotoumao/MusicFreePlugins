@@ -163,7 +163,25 @@ async function searchMusicSheet(query, page) {
         data: playlists,
     };
 }
-searchMusicSheet("孤勇者", 1);
+async function searchLyric(query, page) {
+    var _a, _b;
+    const res = await searchBase(query, page, 1006);
+    const lyrics = (_b = (_a = res.result.songs) === null || _a === void 0 ? void 0 : _a.map((it) => {
+        var _a, _b, _c, _d;
+        return ({
+            title: it.name,
+            artist: (_a = it.ar) === null || _a === void 0 ? void 0 : _a.map((_) => _.name).join(", "),
+            id: it.id,
+            artwork: (_b = it.al) === null || _b === void 0 ? void 0 : _b.picUrl,
+            album: (_c = it.al) === null || _c === void 0 ? void 0 : _c.name,
+            rawLrcTxt: (_d = it.lyrics) === null || _d === void 0 ? void 0 : _d.join("\n"),
+        });
+    })) !== null && _b !== void 0 ? _b : [];
+    return {
+        isEnd: res.result.songCount <= page * pageSize,
+        data: lyrics,
+    };
+}
 async function getArtistWorks(artistItem, page, type) {
     const data = {
         csrf_token: "",
@@ -489,7 +507,7 @@ async function getMusicSheetInfo(sheet, page) {
 }
 module.exports = {
     platform: "网易云",
-    version: "0.1.3",
+    version: "0.2.0",
     appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
     cacheControl: "no-store",
@@ -501,6 +519,7 @@ module.exports = {
             "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
         ],
     },
+    supportedSearchType: ["music", "album", "sheet", "artist", "lyric"],
     async search(query, page, type) {
         if (type === "music") {
             return await searchMusic(query, page);
@@ -513,6 +532,9 @@ module.exports = {
         }
         if (type === "sheet") {
             return await searchMusicSheet(query, page);
+        }
+        if (type === "lyric") {
+            return await searchLyric(query, page);
         }
     },
     getMediaSource,
