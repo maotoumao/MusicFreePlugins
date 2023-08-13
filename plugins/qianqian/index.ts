@@ -224,25 +224,30 @@ async function getAlbumInfo(albumItem) {
 }
 
 // 榜单
-async function getTopLists(){
-  const rawHtml = (await axios.get('https://music.91q.com/toplist', {
-    headers: {
-      referer: 'https://m.baidu.com/',
-      'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
-    }
-  })).data;
+async function getTopLists() {
+  const rawHtml = (
+    await axios.get("https://music.91q.com/toplist", {
+      headers: {
+        referer: "https://m.baidu.com/",
+        "user-agent":
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+      },
+    })
+  ).data;
   const funcString = rawHtml.match(
     /<script>\s*window\.__NUXT__\s*=\s*(.+?)<\/script>/
   )?.[1];
   const result = Function(`return ${funcString};`)();
-  return [{
-    title: '排行榜',
-    data: result.data[0].pageData.map(_ => ({
-      title: _.title,
-      id: _.bdid,
-      coverImg: _.pic
-    }))
-  }];
+  return [
+    {
+      title: "排行榜",
+      data: result.data[0].pageData.map((_) => ({
+        title: _.title,
+        id: _.bdid,
+        coverImg: _.pic,
+      })),
+    },
+  ];
 }
 
 async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
@@ -259,13 +264,15 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
     headers,
     params: getSignedParams({
       bdid: topListItem.id,
-      appid: "16073360"
+      appid: "16073360",
     }),
   });
   return {
     ...topListItem,
-    musicList: res.data.data.result.filter(musicCanPlayFilter).map(formatMusicItem)
-  }
+    musicList: res.data.data.result
+      .filter(musicCanPlayFilter)
+      .map(formatMusicItem),
+  };
 }
 
 // /** 推荐歌单tag */
@@ -297,11 +304,10 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
 //         id: item.id,
 //         title: item.categoryName
 //       }))
-//     }); 
+//     });
 //     return tagData;
 //   })
 //   const pinned = [];
-
 
 //   return {
 //     pinned,
@@ -348,7 +354,6 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
 // async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 //   let trackIds = sheet._trackIds;
 
-
 //   if(!trackIds) {
 //     const id = sheet.id;
 //     const headers = {
@@ -390,9 +395,11 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
 
 module.exports = {
   platform: "千千音乐",
-  version: "0.1.1",
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qianqian/index.js",
+  version: "0.1.2",
+  srcUrl:
+    "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qianqian/index.js",
   cacheControl: "no-cache",
+  supportedSearchType: ["music", "album", "artist"],
   async search(query, page, type) {
     if (type === "music") {
       return await searchMusic(query, page);
@@ -405,7 +412,7 @@ module.exports = {
     }
   },
   async getMediaSource(musicItem, quality: IMusic.IQualityKey) {
-    if(quality !== 'standard') {
+    if (quality !== "standard") {
       return;
     }
     const headers = {
@@ -437,5 +444,5 @@ module.exports = {
   getLyric,
   getArtistWorks,
   getTopLists,
-  getTopListDetail
+  getTopListDetail,
 };

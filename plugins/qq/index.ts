@@ -55,7 +55,7 @@ const searchTypeMap = {
   2: "album",
   1: "singer",
   3: "songlist",
-  7: "lyric",
+  7: "song", // 实际上是歌词
   12: "mv",
 };
 
@@ -130,7 +130,7 @@ async function searchMusicSheet(query, page) {
 
   return {
     isEnd: musicSheet.isEnd,
-    data: musicSheet.data.map(item => ({
+    data: musicSheet.data.map((item) => ({
       title: item.dissname,
       createAt: item.createtime,
       description: item.introduction,
@@ -138,11 +138,24 @@ async function searchMusicSheet(query, page) {
       worksNums: item.song_count,
       artwork: item.imgurl,
       id: item.dissid,
-      artist: item.creator.name
+      artist: item.creator.name,
     })),
   };
 }
 
+async function searchLyric(query, page) {
+  const songs = await searchBase(query, page, 7);
+
+  return {
+    isEnd: songs.isEnd,
+    data: songs.data.map((it) => ({
+      ...formatMusicItem(it),
+      rawLrcTxt: it.content,
+    })),
+  };
+}
+
+searchLyric("玫瑰花", 1).then(console.log);
 
 function getQueryFromUrl(key, search) {
   try {
@@ -567,7 +580,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 // 接口参考：https://jsososo.github.io/QQMusicApi/#/
 module.exports = {
   platform: "QQ音乐",
-  version: "0.1.3",
+  version: "0.2.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
   cacheControl: "no-cache",
@@ -578,6 +591,7 @@ module.exports = {
       "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
     ],
   },
+  supportedSearchType: ["music", "album", "sheet", "artist", "lyric"],
   async search(query, page, type) {
     if (type === "music") {
       return await searchMusic(query, page);
@@ -590,6 +604,9 @@ module.exports = {
     }
     if (type === "sheet") {
       return await searchMusicSheet(query, page);
+    }
+    if (type === "lyric") {
+      return await searchLyric(query, page);
     }
   },
   async getMediaSource(musicItem, quality: IMusic.IQualityKey) {

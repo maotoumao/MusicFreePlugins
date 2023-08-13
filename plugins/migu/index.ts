@@ -105,6 +105,25 @@ async function searchMusicSheet(query, page) {
   };
 }
 
+async function searchLyric(query, page) {
+  const data = await searchBase(query, page, 7);
+  console.log(data);
+  const lyrics = data.songs.map((result) => ({
+    title: result.title,
+    id: result.id,
+    artist: result.artist,
+    artwork: result.cover,
+    lrc: result.lyrics,
+    album: result.albumName,
+    copyrightId: result.copyrightId
+
+  }));
+  return {
+    isEnd: +data.pageNo * searchRows >= data.pgt,
+    data: lyrics,
+  };
+}
+
 async function getArtistAlbumWorks(artistItem, page) {
   const headers = {
     accept:
@@ -679,7 +698,7 @@ async function getMediaSource(musicItem, quality) {
 
 module.exports = {
   platform: "咪咕",
-  version: "0.1.3",
+  version: "0.2.0",
   appVersion: ">0.1.0-alpha.0",
   hints: {
     importMusicSheet: [
@@ -692,6 +711,7 @@ module.exports = {
   cacheControl: "no-cache",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/migu/index.js",
+  supportedSearchType: ["music", "album", "sheet", "artist", "lyric"],
   getMediaSource,
   async search(query, page, type) {
     if (type === "music") {
@@ -705,6 +725,9 @@ module.exports = {
     }
     if (type === "sheet") {
       return await searchMusicSheet(query, page);
+    }
+    if (type === "lyric") {
+      return await searchLyric(query, page);
     }
   },
 
