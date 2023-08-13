@@ -464,7 +464,7 @@ async function getMusicSheetInfo(sheet, page) {
 }
 module.exports = {
     platform: "酷我",
-    version: "0.1.5",
+    version: "0.1.6",
     appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
     cacheControl: "no-cache",
@@ -475,6 +475,7 @@ module.exports = {
             "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
         ],
     },
+    supportedSearchType: ["music", "album", "sheet", 'artist'],
     async search(query, page, type) {
         if (type === "music") {
             return await searchMusic(query, page);

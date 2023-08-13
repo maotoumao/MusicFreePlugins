@@ -421,7 +421,7 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.6",
+    version: "0.1.7",
     defaultSearchType: "album",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
@@ -434,6 +434,7 @@ module.exports = {
             "导入时间和歌单大小有关，请耐心等待",
         ],
     },
+    supportedSearchType: ["music", "album", "artist",],
     async search(keyword, page, type) {
         if (type === "album" || type === "music") {
             return await searchAlbum(keyword, page);

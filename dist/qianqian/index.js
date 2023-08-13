@@ -184,22 +184,24 @@ async function getAlbumInfo(albumItem) {
 }
 async function getTopLists() {
     var _a;
-    const rawHtml = (await axios_1.default.get('https://music.91q.com/toplist', {
+    const rawHtml = (await axios_1.default.get("https://music.91q.com/toplist", {
         headers: {
-            referer: 'https://m.baidu.com/',
-            'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
-        }
+            referer: "https://m.baidu.com/",
+            "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
+        },
     })).data;
     const funcString = (_a = rawHtml.match(/<script>\s*window\.__NUXT__\s*=\s*(.+?)<\/script>/)) === null || _a === void 0 ? void 0 : _a[1];
     const result = Function(`return ${funcString};`)();
-    return [{
-            title: '排行榜',
-            data: result.data[0].pageData.map(_ => ({
+    return [
+        {
+            title: "排行榜",
+            data: result.data[0].pageData.map((_) => ({
                 title: _.title,
                 id: _.bdid,
-                coverImg: _.pic
-            }))
-        }];
+                coverImg: _.pic,
+            })),
+        },
+    ];
 }
 async function getTopListDetail(topListItem) {
     const headers = {
@@ -214,16 +216,19 @@ async function getTopListDetail(topListItem) {
         headers,
         params: getSignedParams({
             bdid: topListItem.id,
-            appid: "16073360"
+            appid: "16073360",
         }),
     });
-    return Object.assign(Object.assign({}, topListItem), { musicList: res.data.data.result.filter(musicCanPlayFilter).map(formatMusicItem) });
+    return Object.assign(Object.assign({}, topListItem), { musicList: res.data.data.result
+            .filter(musicCanPlayFilter)
+            .map(formatMusicItem) });
 }
 module.exports = {
     platform: "千千音乐",
-    version: "0.1.1",
+    version: "0.1.2",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qianqian/index.js",
     cacheControl: "no-cache",
+    supportedSearchType: ["music", "album", "artist"],
     async search(query, page, type) {
         if (type === "music") {
             return await searchMusic(query, page);
@@ -236,7 +241,7 @@ module.exports = {
         }
     },
     async getMediaSource(musicItem, quality) {
-        if (quality !== 'standard') {
+        if (quality !== "standard") {
             return;
         }
         const headers = {
@@ -262,5 +267,5 @@ module.exports = {
     getLyric,
     getArtistWorks,
     getTopLists,
-    getTopListDetail
+    getTopListDetail,
 };

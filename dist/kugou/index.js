@@ -347,7 +347,7 @@ async function importMusicSheet(urlLike) {
 }
 module.exports = {
     platform: "酷狗",
-    version: "0.1.3",
+    version: "0.1.4",
     appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kugou/index.js",
     cacheControl: "no-cache",
@@ -358,6 +358,7 @@ module.exports = {
             "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
         ],
     },
+    supportedSearchType: ["music", "album", "sheet",],
     async search(query, page, type) {
         if (type === "music") {
             return await searchMusic(query, page);
