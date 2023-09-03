@@ -155,7 +155,7 @@ async function searchLyric(query, page) {
   };
 }
 
-searchLyric("玫瑰花", 1).then(console.log);
+// searchLyric("玫瑰花", 1).then(console.log);
 
 function getQueryFromUrl(key, search) {
   try {
