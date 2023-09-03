@@ -51,7 +51,7 @@ declare namespace IAlbum {
 
   interface IAlbumInfoResult {
     isEnd?: boolean;
-    albumItem?: IAlbum.IAlbumItem;
+    albumItem?: Partial<IAlbum.IAlbumItem>;
     musicList?: IMusic.IMusicItem[];
   }
 }
