@@ -130,7 +130,6 @@ async function searchLyric(query, page) {
         data: songs.data.map((it) => (Object.assign(Object.assign({}, formatMusicItem(it)), { rawLrcTxt: it.content }))),
     };
 }
-// searchLyric("玫瑰花", 1).then(console.log);
 function getQueryFromUrl(key, search) {
     try {
         const sArr = search.split("?");
