@@ -580,7 +580,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 // 接口参考：https://jsososo.github.io/QQMusicApi/#/
 module.exports = {
   platform: "QQ音乐",
-  version: "0.2.0",
+  version: "0.2.1",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
   cacheControl: "no-cache",
@@ -591,6 +591,7 @@ module.exports = {
       "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
     ],
   },
+  primaryKey: ['id', 'songmid'],
   supportedSearchType: ["music", "album", "sheet", "artist", "lyric"],
   async search(query, page, type) {
     if (type === "music") {
