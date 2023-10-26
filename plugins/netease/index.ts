@@ -620,7 +620,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 
 module.exports = {
   platform: "网易云",
-  version: "0.2.0",
+  version: "0.2.1",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",

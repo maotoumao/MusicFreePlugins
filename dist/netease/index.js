@@ -46,28 +46,30 @@ function getParamsAndEnc(text) {
     };
 }
 function formatMusicItem(_) {
+    var _a, _b, _c, _d;
     const album = _.al || _.album;
     return {
         id: _.id,
-        artwork: album.picUrl,
+        artwork: album === null || album === void 0 ? void 0 : album.picUrl,
         title: _.name,
         artist: (_.ar || _.artists)[0].name,
-        album: album.name,
+        album: album === null || album === void 0 ? void 0 : album.name,
         url: `https://music.163.com/song/media/outer/url?id=${_.id}.mp3`,
         qualities: {
             low: {
-                size: (_.l || {}).size,
+                size: (_a = (_.l || {})) === null || _a === void 0 ? void 0 : _a.size,
             },
             standard: {
-                size: (_.m || {}).size,
+                size: (_b = (_.m || {})) === null || _b === void 0 ? void 0 : _b.size,
             },
             high: {
-                size: (_.h || {}).size,
+                size: (_c = (_.h || {})) === null || _c === void 0 ? void 0 : _c.size,
             },
             super: {
-                size: (_.sq || {}).size,
+                size: (_d = (_.sq || {})) === null || _d === void 0 ? void 0 : _d.size,
             },
         },
+        copyrightId: _ === null || _ === void 0 ? void 0 : _.copyrightId
     };
 }
 function formatAlbumItem(_) {
@@ -81,7 +83,8 @@ function formatAlbumItem(_) {
     };
 }
 function musicCanPlayFilter(_) {
-    return (_.fee === 0 || _.fee === 8) && _.privilege.st >= 0;
+    var _a;
+    return (_.fee === 0 || _.fee === 8) && (!_.privilege || ((_a = _.privilege) === null || _a === void 0 ? void 0 : _a.st) >= 0);
 }
 const pageSize = 30;
 async function searchBase(query, page, type) {
@@ -108,7 +111,7 @@ async function searchBase(query, page, type) {
     };
     const res = (await (0, axios_1.default)({
         method: "post",
-        url: "https://music.163.com/weapi/cloudsearch/get/web?csrf_token=",
+        url: "https://music.163.com/weapi/search/get",
         headers,
         data: paeData,
     })).data;
@@ -507,7 +510,7 @@ async function getMusicSheetInfo(sheet, page) {
 }
 module.exports = {
     platform: "网易云",
-    version: "0.2.0",
+    version: "0.2.1",
     appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
     cacheControl: "no-store",
