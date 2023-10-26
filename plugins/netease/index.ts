@@ -63,25 +63,26 @@ function formatMusicItem(_) {
   const album = _.al || _.album;
   return {
     id: _.id,
-    artwork: album.picUrl,
+    artwork: album?.picUrl,
     title: _.name,
     artist: (_.ar || _.artists)[0].name,
-    album: album.name,
+    album: album?.name,
     url: `https://music.163.com/song/media/outer/url?id=${_.id}.mp3`,
     qualities: {
       low: {
-        size: (_.l || {}).size,
+        size: (_.l || {})?.size,
       },
       standard: {
-        size: (_.m || {}).size,
+        size: (_.m || {})?.size,
       },
       high: {
-        size: (_.h || {}).size,
+        size: (_.h || {})?.size,
       },
       super: {
-        size: (_.sq || {}).size,
+        size: (_.sq || {})?.size,
       },
     },
+    copyrightId: _?.copyrightId
   };
 }
 
@@ -97,7 +98,7 @@ function formatAlbumItem(_) {
 }
 
 function musicCanPlayFilter(_) {
-  return (_.fee === 0 || _.fee === 8) && _.privilege.st >= 0;
+  return (_.fee === 0 || _.fee === 8) && (!_.privilege || _.privilege?.st >= 0);
 }
 
 const pageSize = 30;
@@ -129,7 +130,7 @@ async function searchBase(query, page, type) {
   const res = (
     await axios({
       method: "post",
-      url: "https://music.163.com/weapi/cloudsearch/get/web?csrf_token=",
+      url: "https://music.163.com/weapi/search/get",
       headers,
       data: paeData,
     })
