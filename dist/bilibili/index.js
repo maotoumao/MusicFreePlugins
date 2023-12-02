@@ -165,7 +165,7 @@ function getMixinKey(e) {
         t.join("").slice(0, 32));
 }
 function getRid(params) {
-    const npi = "4a1d4479a1ea4146bc7552eea71c28e9fa5812e23a204d10b332dc24d992432d";
+    const npi = "7cd084941338484aae1ad9425b84077c4932caff0ff746eab6f01bf08b70ac45";
     const o = getMixinKey(npi);
     const l = Object.keys(params).sort();
     let c = [];
@@ -189,7 +189,6 @@ async function getArtistWorks(artistItem, page, type) {
         "sec-fetch-mode": "cors",
         "sec-fetch-dest": "empty",
         referer: `https://space.bilibili.com/${artistItem.id}/video`,
-        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
     };
     await getCookie();
     const now = Math.round(Date.now() / 1e3);
@@ -201,7 +200,11 @@ async function getArtistWorks(artistItem, page, type) {
         web_location: 1550101,
         order_avoided: true,
         order: "pubdate",
+        keyword: "",
         platform: "web",
+        dm_img_list: "[]",
+        dm_img_str: "V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ",
+        dm_cover_img_str: "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgR1RYIDE2NTAgKDB4MDAwMDFGOTEpIERpcmVjdDNEMTEgdnNfNV8wIHBzXzVfMCwgRDNEMTEpR29vZ2xlIEluYy4gKE5WSURJQS",
         wts: now.toString(),
     };
     const w_rid = getRid(params);
@@ -421,7 +424,7 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.7",
+    version: "0.1.8",
     defaultSearchType: "album",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
@@ -434,7 +437,7 @@ module.exports = {
             "导入时间和歌单大小有关，请耐心等待",
         ],
     },
-    supportedSearchType: ["music", "album", "artist",],
+    supportedSearchType: ["music", "album", "artist"],
     async search(keyword, page, type) {
         if (type === "album" || type === "music") {
             return await searchAlbum(keyword, page);
