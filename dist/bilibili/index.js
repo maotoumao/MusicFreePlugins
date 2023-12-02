@@ -139,14 +139,17 @@ async function searchAlbum(keyword, page) {
 }
 async function searchArtist(keyword, page) {
     const resultData = await searchBase(keyword, page, "bili_user");
-    const artists = resultData.result.map((result) => ({
-        name: result.uname,
-        id: result.mid,
-        fans: result.fans,
-        description: result.usign,
-        avatar: result.upic,
-        worksNum: result.videos,
-    }));
+    const artists = resultData.result.map((result) => {
+        var _a;
+        return ({
+            name: result.uname,
+            id: result.mid,
+            fans: result.fans,
+            description: result.usign,
+            avatar: ((_a = result.upic) === null || _a === void 0 ? void 0 : _a.startsWith("//")) ? `https://${result.upic}` : result.upic,
+            worksNum: result.videos,
+        });
+    });
     return {
         isEnd: resultData.numResults <= page * pageSize,
         data: artists,
@@ -424,7 +427,7 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.8",
+    version: "0.1.9",
     defaultSearchType: "album",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",

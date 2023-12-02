@@ -175,7 +175,7 @@ async function searchArtist(keyword, page) {
     id: result.mid,
     fans: result.fans,
     description: result.usign,
-    avatar: result.upic,
+    avatar: result.upic?.startsWith("//") ? `https://${result.upic}` : result.upic,
     worksNum: result.videos,
   }));
   return {
@@ -517,7 +517,7 @@ async function importMusicSheet(urlLike: string) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.8",
+  version: "0.1.9",
   defaultSearchType: "album",
   cacheControl: "no-cache",
   srcUrl:
