@@ -1,5 +1,6 @@
 import axios from "axios";
 import dayjs = require("dayjs");
+import CryptoJs = require("crypto-js");
 
 function formatMusicItem(_) {
   return {
@@ -101,7 +102,7 @@ async function getAlbumInfo(albumItem: IAlbum.IAlbumItem, page: number = 1) {
   return {
     isEnd: page * 50 >= res.data.data.trackTotalCount,
     albumItem: {
-      worksNum: res.data.data.trackTotalCount
+      worksNum: res.data.data.trackTotalCount,
     },
     musicList: res.data.data.tracks.filter(paidMusicFilter).map((_) => {
       const r = formatMusicItem(_);
@@ -117,7 +118,7 @@ async function search(query, page, type: ICommon.SupportMediaType) {
     return searchMusic(query, page);
   } else if (type === "album") {
     return searchAlbum(query, page);
-  } else if(type === 'artist') {
+  } else if (type === "artist") {
     return searchArtist(query, page);
   }
 }
@@ -130,24 +131,33 @@ async function getMediaSource(
     return;
   }
 
-  const data = await axios.get(
-    "https://www.ximalaya.com/revision/play/v1/audio",
+  const info = (
+    await axios.get(
+      `https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/${Date.now()}?device=www&trackId=${
+        musicItem.id
+      }&trackQualityLevel=1`
+    )
+  ).data;
+
+  const trackInfo = info.trackInfo;
+  const { playUrlList } = trackInfo;
+
+  const encodeText = playUrlList[0].url;
+
+  const url = CryptoJs.AES.decrypt(
+    // @ts-ignore
     {
-      params: {
-        id: musicItem.id,
-        ptype: 1,
-      },
-      headers: {
-        referer: `https://www.ximalaya.com/sound/${musicItem.id}`,
-        accept: "*/*",
-        "accept-encoding": "gzip, deflate, br",
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61",
-      },
+      ciphertext: CryptoJs.enc.Base64url.parse(encodeText),
+    },
+    CryptoJs.enc.Hex.parse("aaad3e4fd540b0f79dca95606e72bf93"),
+    {
+      mode: CryptoJs.mode.ECB,
+      padding: CryptoJs.pad.Pkcs7,
     }
-  );
+  ).toString(CryptoJs.enc.Utf8);
+
   return {
-    url: data.data.data.src,
+    url,
   };
 }
 
@@ -189,12 +199,12 @@ async function getArtistWorks(artistItem, page, type) {
   }
 }
 
-
 module.exports = {
   platform: "喜马拉雅",
-  version: "0.1.4",
-  supportedSearchType: ["music", "album", "artist",],
-  srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/xmly/index.js",
+  version: "0.1.5",
+  supportedSearchType: ["music", "album", "artist"],
+  srcUrl:
+    "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/xmly/index.js",
   cacheControl: "no-cache",
   search,
   getAlbumInfo,

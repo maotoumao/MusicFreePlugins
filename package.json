@@ -17,7 +17,8 @@
     "test-maoerfm": "ts-node -T ./plugins/maoerfm/index.ts",
     "test-kuaishou": "ts-node -T ./plugins/kuaishou/index.ts",
     "test-yinyuetai": "ts-node -T ./plugins/yinyuetai/index.ts",
-    "test-youtube": "ts-node -T ./plugins/youtube/index.ts"
+    "test-youtube": "ts-node -T ./plugins/youtube/index.ts",
+    "test-xmly": "ts-node -T ./plugins/xmly/index.ts"
   },
   "keywords": [],
   "author": {
