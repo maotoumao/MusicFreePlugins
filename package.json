@@ -8,6 +8,7 @@
     "build": "tsc & node ./scripts/generate.js",
     "publish": "git checkout master & git merge v0.1 & git push & git checkout v0.1 & git push",
     "test-kugou": "ts-node -T ./plugins/kugou/index.ts",
+    "test-audiomack": "ts-node -T ./plugins/audiomack/index.ts",
     "test-kuwo": "ts-node -T ./plugins/kuwo/index.ts",
     "test-migu": "ts-node -T ./plugins/migu/index.ts",
     "test-qq": "ts-node -T ./plugins/qq/index.ts",
