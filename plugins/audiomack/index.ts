@@ -541,7 +541,7 @@ async function getTopListDetail(topListItem, page = 1) {
 }
 
 module.exports = {
-  platform: "audiomack",
+  platform: "Audiomack",
   version: "0.0.0",
   primaryKey: ["id", "url_slug"],
   srcUrl:

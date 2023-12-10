@@ -430,7 +430,7 @@ async function getTopListDetail(topListItem, page = 1) {
     };
 }
 module.exports = {
-    platform: "audiomack",
+    platform: "Audiomack",
     version: "0.0.0",
     primaryKey: ["id", "url_slug"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/audiomack/index.js",
