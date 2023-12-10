@@ -332,9 +332,106 @@ async function getRecommendSheetsByTag(tag, page) {
         data: results.map(formatMusicSheetItem),
     };
 }
+async function getTopLists() {
+    const genres = [
+        {
+            title: "All Genres",
+            url_slug: null,
+        },
+        {
+            title: "Afrosounds",
+            url_slug: "afrobeats",
+        },
+        {
+            title: "Hip-Hop/Rap",
+            url_slug: "rap",
+        },
+        {
+            title: "Latin",
+            url_slug: "latin",
+        },
+        {
+            title: "Caribbean",
+            url_slug: "caribbean",
+        },
+        {
+            title: "Pop",
+            url_slug: "pop",
+        },
+        {
+            title: "R&B",
+            url_slug: "rb",
+        },
+        {
+            title: "Gospel",
+            url_slug: "gospel",
+        },
+        {
+            title: "Electronic",
+            url_slug: "electronic",
+        },
+        {
+            title: "Rock",
+            url_slug: "rock",
+        },
+        {
+            title: "Punjabi",
+            url_slug: "punjabi",
+        },
+        {
+            title: "Country",
+            url_slug: "country",
+        },
+        {
+            title: "Instrumental",
+            url_slug: "instrumental",
+        },
+        {
+            title: "Podcast",
+            url_slug: "podcast",
+        },
+    ];
+    return [
+        {
+            title: "Trending Songs",
+            data: genres.map((it) => {
+                var _a;
+                return (Object.assign(Object.assign({}, it), { type: "trending", id: (_a = it.url_slug) !== null && _a !== void 0 ? _a : it.title }));
+            }),
+        },
+        {
+            title: "Recently Added Music",
+            data: genres.map((it) => {
+                var _a;
+                return (Object.assign(Object.assign({}, it), { type: "recent", id: (_a = it.url_slug) !== null && _a !== void 0 ? _a : it.title }));
+            }),
+        },
+    ];
+}
+async function getTopListDetail(topListItem, page = 1) {
+    const type = topListItem.type;
+    const partialUrl = `/music/${topListItem.url_slug ? `${topListItem.url_slug}/` : ""}${type}/page/${page}`;
+    const url = `https://api.audiomack.com/v1${partialUrl}`;
+    const params = {
+        oauth_consumer_key: "audiomack-js",
+        oauth_nonce: nonce(32),
+        oauth_signature_method: "HMAC-SHA1",
+        oauth_timestamp: Math.round(Date.now() / 1e3),
+        oauth_version: "1.0",
+        type: "song",
+    };
+    const oauth_signature = getSignature("GET", partialUrl, params);
+    const results = (await axios_1.default.get(url, {
+        headers,
+        params: Object.assign(Object.assign({}, params), { oauth_signature }),
+    })).data.results;
+    return {
+        musicList: results.map(formatMusicItem),
+    };
+}
 module.exports = {
     platform: "audiomack",
-    version: "0.0.0-alpha.2",
+    version: "0.0.0",
     primaryKey: ["id", "url_slug"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/audiomack/index.js",
     cacheControl: "no-cache",
@@ -358,4 +455,6 @@ module.exports = {
     getArtistWorks,
     getRecommendSheetTags,
     getRecommendSheetsByTag,
+    getTopLists,
+    getTopListDetail,
 };
