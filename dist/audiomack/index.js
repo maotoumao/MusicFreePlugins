@@ -201,7 +201,20 @@ async function searchArtist(query, page) {
         })),
     };
 }
-const dataUrlBase = "https://audiomack.com/_next/data/ANhfTH6JqhARx06VF71Rd";
+let dataUrlBase;
+async function getDataUrlBase() {
+    if (dataUrlBase) {
+        return dataUrlBase;
+    }
+    const rawHtml = (await axios_1.default.get("https://audiomack.com/")).data;
+    const $ = (0, cheerio_1.load)(rawHtml);
+    const script = $("script#__NEXT_DATA__").text();
+    const jsonObj = JSON.parse(script);
+    if (jsonObj.buildId) {
+        dataUrlBase = `https://audiomack.com/_next/data/${jsonObj.buildId}`;
+    }
+    return dataUrlBase;
+}
 async function getArtistWorks(artistItem, page, type) {
     if (type === "music") {
         const params = {
@@ -251,12 +264,13 @@ async function getArtistWorks(artistItem, page, type) {
     }
 }
 async function getMusicSheetInfo(sheet, page) {
-    const res = (await axios_1.default.get(`${dataUrlBase}/${sheet.artistItem.url_slug}/playlist/${sheet.url_slug}.json`, {
+    const _dataUrlBase = await getDataUrlBase();
+    const res = (await axios_1.default.get(`${_dataUrlBase}/${sheet.artistItem.url_slug}/playlist/${sheet.url_slug}.json`, {
         params: {
             page_slug: sheet.artistItem.url_slug,
             playlist_slug: sheet.url_slug,
         },
-        headers: Object.assign({ Referer: `https://audiomack.com/search?q=${sheet.title}&show=playlists` }, headers),
+        headers: Object.assign({}, headers),
     })).data;
     const musicPage = res.pageProps.initialState.musicPage;
     const targetKey = Object.keys(musicPage).find((it) => it.startsWith("musicMusicPage"));
@@ -431,7 +445,7 @@ async function getTopListDetail(topListItem, page = 1) {
 }
 module.exports = {
     platform: "Audiomack",
-    version: "0.0.0",
+    version: "0.0.1",
     primaryKey: ["id", "url_slug"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/audiomack/index.js",
     cacheControl: "no-cache",

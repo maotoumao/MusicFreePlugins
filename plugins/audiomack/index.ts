@@ -238,7 +238,22 @@ async function searchArtist(query, page) {
   };
 }
 
-const dataUrlBase = "https://audiomack.com/_next/data/ANhfTH6JqhARx06VF71Rd";
+let dataUrlBase;
+
+async function getDataUrlBase() {
+  if (dataUrlBase) {
+    return dataUrlBase;
+  }
+  const rawHtml = (await axios.get("https://audiomack.com/")).data;
+  const $ = load(rawHtml);
+  const script = $("script#__NEXT_DATA__").text();
+  const jsonObj = JSON.parse(script);
+  
+  if (jsonObj.buildId) {
+    dataUrlBase = `https://audiomack.com/_next/data/${jsonObj.buildId}`
+  }
+  return dataUrlBase;
+}
 
 async function getArtistWorks(artistItem, page, type) {
   if (type === "music") {
@@ -309,16 +324,17 @@ async function getArtistWorks(artistItem, page, type) {
 }
 
 async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
+  const _dataUrlBase = await getDataUrlBase();
+
   const res = (
     await axios.get(
-      `${dataUrlBase}/${sheet.artistItem.url_slug}/playlist/${sheet.url_slug}.json`,
+      `${_dataUrlBase}/${sheet.artistItem.url_slug}/playlist/${sheet.url_slug}.json`,
       {
         params: {
           page_slug: sheet.artistItem.url_slug,
           playlist_slug: sheet.url_slug,
         },
         headers: {
-          Referer: `https://audiomack.com/search?q=${sheet.title}&show=playlists`,
           ...headers,
         },
       }
@@ -542,7 +558,7 @@ async function getTopListDetail(topListItem, page = 1) {
 
 module.exports = {
   platform: "Audiomack",
-  version: "0.0.0",
+  version: "0.0.1",
   primaryKey: ["id", "url_slug"],
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/audiomack/index.js",
@@ -581,4 +597,5 @@ module.exports = {
 //   "standard"
 // ).then(console.log);
 
-// searchMusic("林俊杰", 1).then(console.log);
+// searchMusicSheet("周杰伦", 1).then(e => console.log(JSON.stringify(e.data[0])));
+
