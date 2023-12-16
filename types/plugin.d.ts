@@ -84,6 +84,14 @@ declare namespace IPlugin {
     quality?: IMusic.IQualityKey;
   }
 
+  interface IUserVariable {
+    /** 变量键名 */
+    key: string;
+    /** 变量名 */
+    name?: string;
+}
+
+
   interface IPluginDefine {
     /** 插件名 */
     platform: string;
@@ -99,6 +107,8 @@ declare namespace IPlugin {
     defaultSearchType?: ICommon.SupportMediaType;
     /** 插件缓存控制 */
     cacheControl?: ICacheControl;
+    /** 用户自定义输入 */
+    userVariables?: IUserVariable[];
     /** 搜索 */
     search?: ISearchFunc;
     /** 获取根据音乐信息获取url */
