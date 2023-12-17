@@ -86,7 +86,8 @@ async function getMediaSource(musicItem, quality) {
 }
 module.exports = {
     platform: "音悦台",
-    version: "0.0.0",
+    author: '猫头猫',
+    version: "0.0.1",
     supportedSearchType: ["music"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/yinyuetai/index.js",
     cacheControl: "no-cache",

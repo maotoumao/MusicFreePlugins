@@ -225,7 +225,8 @@ async function getTopListDetail(topListItem) {
 }
 module.exports = {
     platform: "千千音乐",
-    version: "0.1.2",
+    author: '猫头猫',
+    version: "0.1.3",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qianqian/index.js",
     cacheControl: "no-cache",
     supportedSearchType: ["music", "album", "artist"],

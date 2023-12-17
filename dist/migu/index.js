@@ -591,7 +591,8 @@ async function getMediaSource(musicItem, quality) {
 }
 module.exports = {
     platform: "咪咕",
-    version: "0.2.0",
+    author: '猫头猫',
+    version: "0.2.1",
     appVersion: ">0.1.0-alpha.0",
     hints: {
         importMusicSheet: [

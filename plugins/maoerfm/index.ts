@@ -224,7 +224,8 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 
 module.exports = {
   platform: "猫耳FM",
-  version: "0.1.3",
+  author: '猫头猫',
+  version: "0.1.4",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/maoerfm/index.js",

@@ -201,7 +201,8 @@ async function getArtistWorks(artistItem, page, type) {
 
 module.exports = {
   platform: "喜马拉雅",
-  version: "0.1.5",
+  author: '猫头猫',
+  version: "0.1.6",
   supportedSearchType: ["music", "album", "artist"],
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/xmly/index.js",

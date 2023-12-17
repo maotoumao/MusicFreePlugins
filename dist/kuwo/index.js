@@ -464,7 +464,8 @@ async function getMusicSheetInfo(sheet, page) {
 }
 module.exports = {
     platform: "酷我",
-    version: "0.1.6",
+    author: '猫头猫',
+    version: "0.1.7",
     appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuwo/index.js",
     cacheControl: "no-cache",

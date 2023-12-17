@@ -479,7 +479,8 @@ async function getMusicSheetInfo(sheet, page) {
 }
 module.exports = {
     platform: "QQ音乐",
-    version: "0.2.1",
+    author: '猫头猫',
+    version: "0.2.2",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
     cacheControl: "no-cache",
     hints: {

@@ -445,7 +445,8 @@ async function getTopListDetail(topListItem, page = 1) {
 }
 module.exports = {
     platform: "Audiomack",
-    version: "0.0.1",
+    version: "0.0.2",
+    author: '猫头猫',
     primaryKey: ["id", "url_slug"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/audiomack/index.js",
     cacheControl: "no-cache",
