@@ -112,20 +112,21 @@ async function getFavoriteList(id) {
     return result;
 }
 function formatMedia(result) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    const title = he.decode((_b = (_a = result.title) === null || _a === void 0 ? void 0 : _a.replace(/(\<em(.*?)\>)|(\<\/em\>)/g, "")) !== null && _b !== void 0 ? _b : "");
     return {
-        id: (_b = (_a = result.cid) !== null && _a !== void 0 ? _a : result.bvid) !== null && _b !== void 0 ? _b : result.aid,
+        id: (_d = (_c = result.cid) !== null && _c !== void 0 ? _c : result.bvid) !== null && _d !== void 0 ? _d : result.aid,
         aid: result.aid,
         bvid: result.bvid,
-        artist: (_c = result.author) !== null && _c !== void 0 ? _c : (_d = result.owner) === null || _d === void 0 ? void 0 : _d.name,
-        title: he.decode((_f = (_e = result.title) === null || _e === void 0 ? void 0 : _e.replace(/(\<em(.*?)\>)|(\<\/em\>)/g, "")) !== null && _f !== void 0 ? _f : ""),
-        album: (_g = result.bvid) !== null && _g !== void 0 ? _g : result.aid,
-        artwork: ((_h = result.pic) === null || _h === void 0 ? void 0 : _h.startsWith("//"))
+        artist: (_e = result.author) !== null && _e !== void 0 ? _e : (_f = result.owner) === null || _f === void 0 ? void 0 : _f.name,
+        title,
+        alias: (_g = title.match(/《(.+?)》/)) === null || _g === void 0 ? void 0 : _g[1],
+        album: (_h = result.bvid) !== null && _h !== void 0 ? _h : result.aid,
+        artwork: ((_j = result.pic) === null || _j === void 0 ? void 0 : _j.startsWith("//"))
             ? "http:".concat(result.pic)
             : result.pic,
-        description: result.description,
         duration: durationToSec(result.duration),
-        tags: (_j = result.tag) === null || _j === void 0 ? void 0 : _j.split(","),
+        tags: (_k = result.tag) === null || _k === void 0 ? void 0 : _k.split(","),
         date: dayjs.unix(result.pubdate || result.created).format("YYYY-MM-DD"),
     };
 }
@@ -146,7 +147,9 @@ async function searchArtist(keyword, page) {
             id: result.mid,
             fans: result.fans,
             description: result.usign,
-            avatar: ((_a = result.upic) === null || _a === void 0 ? void 0 : _a.startsWith("//")) ? `https://${result.upic}` : result.upic,
+            avatar: ((_a = result.upic) === null || _a === void 0 ? void 0 : _a.startsWith("//"))
+                ? `https://${result.upic}`
+                : result.upic,
             worksNum: result.videos,
         });
     });
@@ -292,9 +295,8 @@ async function getTopLists() {
         title: "每周必看",
         data: [],
     };
-    const weeklyRes = await axios_1.default.get("https://api.bilibili.com/x/web-interface/popular/series/list", {
-        headers: Object.assign(Object.assign({}, headers), { referer: "https://www.bilibili.com/" }),
-    });
+    const weeklyRes = await axios_1.default.get("https://api.bilibili.com/x/web-interface/popular/series/list");
+    console.log(weeklyRes.data);
     weekly.data = weeklyRes.data.data.list.slice(0, 8).map((e) => ({
         id: `popular/series/one?number=${e.number}`,
         title: e.subject,
@@ -427,9 +429,8 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.10",
-    author: '猫头猫',
-    defaultSearchType: "album",
+    version: "0.1.11",
+    author: "猫头猫",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
     primaryKey: ["id", "aid", "bvid", "cid"],

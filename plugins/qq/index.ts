@@ -1,5 +1,6 @@
 import axios from "axios";
 import CryptoJs = require("crypto-js");
+import he = require("he");
 
 const pageSize = 20;
 
@@ -154,8 +155,6 @@ async function searchLyric(query, page) {
     })),
   };
 }
-
-// searchLyric("玫瑰花", 1).then(console.log);
 
 function getQueryFromUrl(key, search) {
   try {
@@ -412,8 +411,18 @@ async function getLyric(musicItem) {
     result.replace(/callback\(|MusicJsonCallback\(|jsonCallback\(|\)$/g, "")
   );
 
+  let translation;
+  if (res.trans) {
+    translation = he.decode(
+      CryptoJs.enc.Base64.parse(res.trans).toString(CryptoJs.enc.Utf8)
+    );
+  }
+
   return {
-    rawLrc: CryptoJs.enc.Base64.parse(res.lyric).toString(CryptoJs.enc.Utf8),
+    rawLrc: he.decode(
+      CryptoJs.enc.Base64.parse(res.lyric).toString(CryptoJs.enc.Utf8)
+    ),
+    translation,
   };
 }
 
@@ -580,8 +589,8 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 // 接口参考：https://jsososo.github.io/QQMusicApi/#/
 module.exports = {
   platform: "QQ音乐",
-  author: '猫头猫',
-  version: "0.2.2",
+  author: "猫头猫",
+  version: "0.2.2-alpha.3",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
   cacheControl: "no-cache",
@@ -592,7 +601,7 @@ module.exports = {
       "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
     ],
   },
-  primaryKey: ['id', 'songmid'],
+  primaryKey: ["id", "songmid"],
   supportedSearchType: ["music", "album", "sheet", "artist", "lyric"],
   async search(query, page, type) {
     if (type === "music") {

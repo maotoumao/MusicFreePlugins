@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = require("axios");
 const CryptoJs = require("crypto-js");
+const he = require("he");
 const pageSize = 20;
 function formatMusicItem(_) {
     var _a, _b, _c;
@@ -347,8 +348,13 @@ async function getLyric(musicItem) {
         withCredentials: true,
     })).data;
     const res = JSON.parse(result.replace(/callback\(|MusicJsonCallback\(|jsonCallback\(|\)$/g, ""));
+    let translation;
+    if (res.trans) {
+        translation = he.decode(CryptoJs.enc.Base64.parse(res.trans).toString(CryptoJs.enc.Utf8));
+    }
     return {
-        rawLrc: CryptoJs.enc.Base64.parse(res.lyric).toString(CryptoJs.enc.Utf8),
+        rawLrc: he.decode(CryptoJs.enc.Base64.parse(res.lyric).toString(CryptoJs.enc.Utf8)),
+        translation,
     };
 }
 async function importMusicSheet(urlLike) {
@@ -479,8 +485,8 @@ async function getMusicSheetInfo(sheet, page) {
 }
 module.exports = {
     platform: "QQ音乐",
-    author: '猫头猫',
-    version: "0.2.2",
+    author: "猫头猫",
+    version: "0.2.2-alpha.3",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/qq/index.js",
     cacheControl: "no-cache",
     hints: {
@@ -490,7 +496,7 @@ module.exports = {
             "导入过程中会过滤掉所有VIP/试听/收费音乐，导入时间和歌单大小有关，请耐心等待",
         ],
     },
-    primaryKey: ['id', 'songmid'],
+    primaryKey: ["id", "songmid"],
     supportedSearchType: ["music", "album", "sheet", "artist", "lyric"],
     async search(query, page, type) {
         if (type === "music") {

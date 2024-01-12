@@ -140,19 +140,21 @@ async function getFavoriteList(id: number | string) {
 }
 
 function formatMedia(result: any) {
+  const title = he.decode(
+    result.title?.replace(/(\<em(.*?)\>)|(\<\/em\>)/g, "") ?? ""
+  );
   return {
     id: result.cid ?? result.bvid ?? result.aid,
     aid: result.aid,
     bvid: result.bvid,
     artist: result.author ?? result.owner?.name,
-    title: he.decode(
-      result.title?.replace(/(\<em(.*?)\>)|(\<\/em\>)/g, "") ?? ""
-    ),
+    title,
+    alias: title.match(/《(.+?)》/)?.[1],
     album: result.bvid ?? result.aid,
     artwork: result.pic?.startsWith("//")
       ? "http:".concat(result.pic)
       : result.pic,
-    description: result.description,
+    // description: result.description,
     duration: durationToSec(result.duration),
     tags: result.tag?.split(","),
     date: dayjs.unix(result.pubdate || result.created).format("YYYY-MM-DD"),
@@ -175,7 +177,9 @@ async function searchArtist(keyword, page) {
     id: result.mid,
     fans: result.fans,
     description: result.usign,
-    avatar: result.upic?.startsWith("//") ? `https://${result.upic}` : result.upic,
+    avatar: result.upic?.startsWith("//")
+      ? `https://${result.upic}`
+      : result.upic,
     worksNum: result.videos,
   }));
   return {
@@ -360,15 +364,13 @@ async function getTopLists() {
     title: "每周必看",
     data: [],
   };
+
+
   const weeklyRes = await axios.get(
-    "https://api.bilibili.com/x/web-interface/popular/series/list",
-    {
-      headers: {
-        ...headers,
-        referer: "https://www.bilibili.com/",
-      },
-    }
+    "https://api.bilibili.com/x/web-interface/popular/series/list"
   );
+
+  console.log(weeklyRes.data);
   weekly.data = weeklyRes.data.data.list.slice(0, 8).map((e) => ({
     id: `popular/series/one?number=${e.number}`,
     title: e.subject,
@@ -517,9 +519,8 @@ async function importMusicSheet(urlLike: string) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.10",
-  author: '猫头猫',
-  defaultSearchType: "album",
+  version: "0.1.11",
+  author: "猫头猫",
   cacheControl: "no-cache",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
