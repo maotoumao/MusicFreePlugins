@@ -470,6 +470,8 @@ async function getTopLists() {
   return [weekly, precious, board];
 }
 
+getTopLists().then(console.log)
+
 async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   const res = await axios.get(
     `https://api.bilibili.com/x/web-interface/${topListItem.id}`,
