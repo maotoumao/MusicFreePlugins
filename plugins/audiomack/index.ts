@@ -564,6 +564,7 @@ module.exports = {
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/audiomack/index.js",
   cacheControl: "no-cache",
+  supportedSearchType: ['music', 'album', 'sheet', 'artist'],
   async search(query, page, type) {
     if (type === "music") {
       return await searchMusic(query, page);

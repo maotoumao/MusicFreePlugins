@@ -1,5 +1,4 @@
 import axios from "axios";
-import { load } from "cheerio";
 
 const pageSize = 20;
 
@@ -165,3 +164,6 @@ module.exports = {
 
   },
 };
+
+
+// searchMusic('夜曲', 1).then(e => console.log(e.data[1].manifest.adaptationSet[0].representation));
