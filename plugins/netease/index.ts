@@ -200,14 +200,15 @@ async function searchMusicSheet(query, page) {
 async function searchLyric(query, page) {
   const res = await searchBase(query, page, 1006);
 
+
   const lyrics =
     res.result.songs?.map((it) => ({
       title: it.name,
-      artist: it.ar?.map((_) => _.name)?.join(", "),
+      artist: it.artists?.map((_) => _.name)?.join(", "),
       id: it.id,
       artwork: (it.al || it.album)?.picUrl,
       album: (it.al || it.album)?.name,
-      rawLrcTxt: it.lyrics.txt?.join("\n"),
+      rawLrcTxt: it.lyrics.txt,
     })) ?? [];
 
   return {

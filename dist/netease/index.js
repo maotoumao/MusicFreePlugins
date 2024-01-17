@@ -170,14 +170,14 @@ async function searchLyric(query, page) {
     var _a, _b;
     const res = await searchBase(query, page, 1006);
     const lyrics = (_b = (_a = res.result.songs) === null || _a === void 0 ? void 0 : _a.map((it) => {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d;
         return ({
             title: it.name,
-            artist: (_b = (_a = it.ar) === null || _a === void 0 ? void 0 : _a.map((_) => _.name)) === null || _b === void 0 ? void 0 : _b.join(", "),
+            artist: (_b = (_a = it.artists) === null || _a === void 0 ? void 0 : _a.map((_) => _.name)) === null || _b === void 0 ? void 0 : _b.join(", "),
             id: it.id,
             artwork: (_c = (it.al || it.album)) === null || _c === void 0 ? void 0 : _c.picUrl,
             album: (_d = (it.al || it.album)) === null || _d === void 0 ? void 0 : _d.name,
-            rawLrcTxt: (_e = it.lyrics.txt) === null || _e === void 0 ? void 0 : _e.join("\n"),
+            rawLrcTxt: it.lyrics.txt,
         });
     })) !== null && _b !== void 0 ? _b : [];
     return {
