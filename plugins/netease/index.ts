@@ -199,14 +199,15 @@ async function searchMusicSheet(query, page) {
 
 async function searchLyric(query, page) {
   const res = await searchBase(query, page, 1006);
+
   const lyrics =
     res.result.songs?.map((it) => ({
       title: it.name,
-      artist: it.ar?.map((_) => _.name).join(", "),
+      artist: it.ar?.map((_) => _.name)?.join(", "),
       id: it.id,
-      artwork: it.al?.picUrl,
-      album: it.al?.name,
-      rawLrcTxt: it.lyrics?.join("\n"),
+      artwork: (it.al || it.album)?.picUrl,
+      album: (it.al || it.album)?.name,
+      rawLrcTxt: it.lyrics.txt?.join("\n"),
     })) ?? [];
 
   return {
@@ -214,6 +215,7 @@ async function searchLyric(query, page) {
     data: lyrics,
   };
 }
+
 
 
 async function getArtistWorks(artistItem, page, type) {
@@ -296,8 +298,10 @@ async function getLyric(musicItem) {
     })
   ).data;
 
+
   return {
     rawLrc: result.lrc.lyric,
+    translation: result.tlyric?.lyric
   };
 }
 
@@ -621,7 +625,7 @@ async function getMusicSheetInfo(sheet: IMusicSheet.IMusicSheetItem, page) {
 module.exports = {
   platform: "网易云",
   author: '猫头猫',
-  version: "0.2.2",
+  version: "0.2.3",
   appVersion: ">0.1.0-alpha.0",
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",

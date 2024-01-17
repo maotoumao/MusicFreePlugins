@@ -86,7 +86,7 @@ async function searchMusicSheet(query, page) {
         artwork: result.img,
         description: result.intro,
         worksNum: result.musicNum,
-        playCount: result.playNum
+        playCount: result.playNum,
     }));
     return {
         isEnd: +data.pageNo * searchRows >= data.pgt,
@@ -95,7 +95,6 @@ async function searchMusicSheet(query, page) {
 }
 async function searchLyric(query, page) {
     const data = await searchBase(query, page, 7);
-    console.log(data);
     const lyrics = data.songs.map((result) => ({
         title: result.title,
         id: result.id,
@@ -103,13 +102,14 @@ async function searchLyric(query, page) {
         artwork: result.cover,
         lrc: result.lyrics,
         album: result.albumName,
-        copyrightId: result.copyrightId
+        copyrightId: result.copyrightId,
     }));
     return {
         isEnd: +data.pageNo * searchRows >= data.pgt,
         data: lyrics,
     };
 }
+searchLyric('夜曲', 1).then(console.log);
 async function getArtistAlbumWorks(artistItem, page) {
     const headers = {
         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -409,7 +409,7 @@ async function getTopListDetail(topListItem) {
         params: {
             pathName: topListItem.id,
             pageNum: 1,
-            pageSize: 100
+            pageSize: 100,
         },
         headers: {
             Accept: "*/*",
@@ -514,85 +514,42 @@ async function getRecommendSheetsByTag(sheetItem, page) {
 }
 let lastSource = null;
 async function getMediaSource(musicItem, quality) {
-    var _a, _b;
     if (quality === "standard" && musicItem.url) {
         return {
             url: musicItem.url,
         };
     }
-    let toneFlag = "HQ";
-    if (quality === "super") {
-        toneFlag = "ZQ";
-    }
-    else if (quality === "high") {
-        toneFlag = "SQ";
-    }
-    else if (quality === "low") {
-        toneFlag = "PQ";
-    }
-    try {
-        const resource = (await (0, axios_1.default)({
-            url: `https://app.c.nf.migu.cn/MIGUM2.0/strategy/listen-url/v2.2?netType=01&resourceType=E&songId=${musicItem.copyrightId}&toneFlag=${toneFlag}`,
-            headers: {
-                referer: "http://m.music.migu.cn/v3",
-                uid: 123,
-                channel: "0146741",
+    else if (quality === "standard") {
+        const headers = {
+            Accept: "application/json, text/javascript, */*; q=0.01",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+            Connection: "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            Host: "m.music.migu.cn",
+            Referer: `https://m.music.migu.cn/migu/l/?s=149&p=163&c=5200&j=l&id=${musicItem.copyrightId}`,
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 6.0.1; Moto G (4)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Mobile Safari/537.36 Edg/89.0.774.68",
+            "X-Requested-With": "XMLHttpRequest",
+        };
+        const result = (await axios_1.default.get("https://m.music.migu.cn/migu/remoting/cms_detail_tag", {
+            headers,
+            params: {
+                cpid: musicItem.copyrightId,
             },
         })).data.data;
-        if (!resource.url) {
-            throw new Error();
-        }
         return {
-            artwork: musicItem.artwork || (resource.songItem.albumImgs[0] || {}).img,
-            url: resource.url,
-        };
-    }
-    catch (_c) {
-        if ((lastSource === null || lastSource === void 0 ? void 0 : lastSource.songId) !== musicItem.id) {
-            lastSource = (await axios_1.default.get("https://c.musicapp.migu.cn/MIGUM2.0/v1.0/content/resourceinfo.do", {
-                params: {
-                    copyrightId: musicItem.copyrightId,
-                    resourceType: 2,
-                },
-                headers: {
-                    host: "m.music.migu.cn",
-                    "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1",
-                },
-            })).data.resource[0];
-        }
-        const artwork = musicItem.artwork || (((_a = lastSource.albumImgs) === null || _a === void 0 ? void 0 : _a[0]) || {}).img;
-        let rateFormats = (_b = lastSource.newRateFormats) !== null && _b !== void 0 ? _b : [];
-        let url;
-        if (quality === "super") {
-            url = rateFormats
-                .find((_) => _.formatType === "ZQ")
-                .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
-        }
-        else if (quality === "high") {
-            url = rateFormats
-                .find((_) => _.formatType === "SQ")
-                .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
-        }
-        else if (quality === "low") {
-            url = rateFormats
-                .find((_) => _.formatType === "PQ")
-                .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
-        }
-        else {
-            url = rateFormats
-                .find((_) => _.formatType === "HQ")
-                .url.replace(/ftp:\/\/[^/]+/, "https://freetyst.nf.migu.cn");
-        }
-        return {
-            artwork,
-            url,
+            artwork: musicItem.artwork || result.picM,
+            url: result.listenUrl || result.listenQq || result.lisCr,
         };
     }
 }
 module.exports = {
     platform: "咪咕",
-    author: '猫头猫',
-    version: "0.2.1",
+    author: "猫头猫",
+    version: "0.2.2",
     appVersion: ">0.1.0-alpha.0",
     hints: {
         importMusicSheet: [

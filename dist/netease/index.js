@@ -170,14 +170,14 @@ async function searchLyric(query, page) {
     var _a, _b;
     const res = await searchBase(query, page, 1006);
     const lyrics = (_b = (_a = res.result.songs) === null || _a === void 0 ? void 0 : _a.map((it) => {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         return ({
             title: it.name,
-            artist: (_a = it.ar) === null || _a === void 0 ? void 0 : _a.map((_) => _.name).join(", "),
+            artist: (_b = (_a = it.ar) === null || _a === void 0 ? void 0 : _a.map((_) => _.name)) === null || _b === void 0 ? void 0 : _b.join(", "),
             id: it.id,
-            artwork: (_b = it.al) === null || _b === void 0 ? void 0 : _b.picUrl,
-            album: (_c = it.al) === null || _c === void 0 ? void 0 : _c.name,
-            rawLrcTxt: (_d = it.lyrics) === null || _d === void 0 ? void 0 : _d.join("\n"),
+            artwork: (_c = (it.al || it.album)) === null || _c === void 0 ? void 0 : _c.picUrl,
+            album: (_d = (it.al || it.album)) === null || _d === void 0 ? void 0 : _d.name,
+            rawLrcTxt: (_e = it.lyrics.txt) === null || _e === void 0 ? void 0 : _e.join("\n"),
         });
     })) !== null && _b !== void 0 ? _b : [];
     return {
@@ -233,6 +233,7 @@ async function getTopListDetail(topListItem) {
     return Object.assign(Object.assign({}, topListItem), { musicList });
 }
 async function getLyric(musicItem) {
+    var _a;
     const headers = {
         Referer: "https://y.music.163.com/",
         Origin: "https://y.music.163.com/",
@@ -251,6 +252,7 @@ async function getLyric(musicItem) {
     })).data;
     return {
         rawLrc: result.lrc.lyric,
+        translation: (_a = result.tlyric) === null || _a === void 0 ? void 0 : _a.lyric
     };
 }
 async function getAlbumInfo(albumItem) {
@@ -511,7 +513,7 @@ async function getMusicSheetInfo(sheet, page) {
 module.exports = {
     platform: "网易云",
     author: '猫头猫',
-    version: "0.2.2",
+    version: "0.2.3",
     appVersion: ">0.1.0-alpha.0",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/netease/index.js",
     cacheControl: "no-store",
