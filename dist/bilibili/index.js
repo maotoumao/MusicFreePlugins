@@ -428,7 +428,7 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.12",
+    version: "0.1.13",
     author: "猫头猫",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
