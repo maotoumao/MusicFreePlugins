@@ -295,9 +295,7 @@ async function getTopLists() {
         title: "每周必看",
         data: [],
     };
-    const weeklyRes = await axios_1.default.get("https://api.bilibili.com/x/web-interface/popular/series/list", {
-        headers: Object.assign(Object.assign({}, headers), { referer: "https://www.bilibili.com/" }),
-    });
+    const weeklyRes = await axios_1.default.get("https://api.bilibili.com/x/web-interface/popular/series/list");
     weekly.data = weeklyRes.data.data.list.slice(0, 8).map((e) => ({
         id: `popular/series/one?number=${e.number}`,
         title: e.subject,
