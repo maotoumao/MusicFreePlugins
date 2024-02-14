@@ -367,15 +367,8 @@ async function getTopLists() {
 
   const weeklyRes = await axios.get(
     "https://api.bilibili.com/x/web-interface/popular/series/list",
-    {
-      headers: {
-        ...headers,
-        referer: "https://www.bilibili.com/",
-      },
-    }
   );
 
-  // console.log(weeklyRes.data);
   weekly.data = weeklyRes.data.data.list.slice(0, 8).map((e) => ({
     id: `popular/series/one?number=${e.number}`,
     title: e.subject,
@@ -475,7 +468,6 @@ async function getTopLists() {
   return [weekly, precious, board];
 }
 
-// getTopLists().then(console.log)
 
 async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   const res = await axios.get(
