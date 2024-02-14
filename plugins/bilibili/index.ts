@@ -518,7 +518,7 @@ async function importMusicSheet(urlLike: string) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.12",
+  version: "0.1.13",
   author: "猫头猫",
   cacheControl: "no-cache",
   srcUrl:
