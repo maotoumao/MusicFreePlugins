@@ -295,7 +295,11 @@ async function getTopLists() {
         title: "每周必看",
         data: [],
     };
-    const weeklyRes = await axios_1.default.get("https://api.bilibili.com/x/web-interface/popular/series/list");
+    const weeklyRes = await axios_1.default.get("https://api.bilibili.com/x/web-interface/popular/series/list", {
+        headers: {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        },
+    });
     weekly.data = weeklyRes.data.data.list.slice(0, 8).map((e) => ({
         id: `popular/series/one?number=${e.number}`,
         title: e.subject,
@@ -428,7 +432,7 @@ async function importMusicSheet(urlLike) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.13",
+    version: "0.1.14",
     author: "猫头猫",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",

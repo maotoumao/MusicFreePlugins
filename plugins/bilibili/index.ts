@@ -367,6 +367,12 @@ async function getTopLists() {
 
   const weeklyRes = await axios.get(
     "https://api.bilibili.com/x/web-interface/popular/series/list",
+    {
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+      },
+    }
   );
 
   weekly.data = weeklyRes.data.data.list.slice(0, 8).map((e) => ({
@@ -468,7 +474,6 @@ async function getTopLists() {
   return [weekly, precious, board];
 }
 
-
 async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   const res = await axios.get(
     `https://api.bilibili.com/x/web-interface/${topListItem.id}`,
@@ -518,7 +523,7 @@ async function importMusicSheet(urlLike: string) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.13",
+  version: "0.1.14",
   author: "猫头猫",
   cacheControl: "no-cache",
   srcUrl:
