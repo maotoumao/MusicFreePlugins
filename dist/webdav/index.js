@@ -69,6 +69,7 @@ async function getTopListDetail(topListItem) {
     const client = getClient();
     const fileItems = (await client.getDirectoryContents(topListItem.id)).filter((it) => it.type === "file" && it.mime.startsWith("audio"));
     return {
+        isEnd: true,
         musicList: fileItems.map((it) => ({
             title: it.basename,
             id: it.filename,
