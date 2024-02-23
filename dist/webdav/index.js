@@ -49,8 +49,31 @@ async function searchMusic(query) {
             .map((it) => ({
             title: it.basename,
             id: it.filename,
-            artist: '未知作者',
-            album: '未知专辑'
+            artist: "未知作者",
+            album: "未知专辑",
+        })),
+    };
+}
+async function getTopLists() {
+    getClient();
+    const data = {
+        title: "全部歌曲",
+        data: (cachedData.searchPathList || []).map((it) => ({
+            title: it,
+            id: it,
+        })),
+    };
+    return data;
+}
+async function getTopListDetail(topListItem) {
+    const client = getClient();
+    const fileItems = (await client.getDirectoryContents(topListItem.id)).filter((it) => it.type === "file" && it.mime.startsWith("audio"));
+    return {
+        musicList: fileItems.map((it) => ({
+            title: it.basename,
+            id: it.filename,
+            artist: "未知作者",
+            album: "未知专辑",
         })),
     };
 }
@@ -77,7 +100,7 @@ module.exports = {
             name: "存放歌曲的路径",
         },
     ],
-    version: "0.0.0",
+    version: "0.0.1",
     supportedSearchType: ["music"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/webdav/index.js",
     cacheControl: "no-cache",
@@ -86,6 +109,8 @@ module.exports = {
             return searchMusic(query);
         }
     },
+    getTopLists,
+    getTopListDetail,
     getMediaSource(musicItem) {
         const client = getClient();
         return {
