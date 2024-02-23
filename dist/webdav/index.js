@@ -63,7 +63,7 @@ async function getTopLists() {
             id: it,
         })),
     };
-    return data;
+    return [data];
 }
 async function getTopListDetail(topListItem) {
     const client = getClient();
@@ -100,7 +100,7 @@ module.exports = {
             name: "存放歌曲的路径",
         },
     ],
-    version: "0.0.1",
+    version: "0.0.2",
     supportedSearchType: ["music"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/webdav/index.js",
     cacheControl: "no-cache",
