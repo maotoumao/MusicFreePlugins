@@ -20,7 +20,9 @@
     "test-kuaishou": "ts-node -T ./plugins/kuaishou/index.ts",
     "test-yinyuetai": "ts-node -T ./plugins/yinyuetai/index.ts",
     "test-youtube": "ts-node -T ./plugins/youtube/index.ts",
-    "test-xmly": "ts-node -T ./plugins/xmly/index.ts"
+    "test-xmly": "ts-node -T ./plugins/xmly/index.ts",
+    "test-suno": "ts-node -T ./plugins/suno/index.ts",
+    "test-udio": "ts-node -T ./plugins/udio/index.ts"
   },
   "keywords": [],
   "author": {
