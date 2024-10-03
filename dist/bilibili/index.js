@@ -430,10 +430,45 @@ async function importMusicSheet(urlLike) {
         });
     });
 }
+function formatComment(item) {
+    var _a, _b, _c, _d, _e;
+    return {
+        id: item.rpid,
+        nickName: (_a = item.member) === null || _a === void 0 ? void 0 : _a.uname,
+        avatar: (_b = item.member) === null || _b === void 0 ? void 0 : _b.avatar,
+        comment: (_c = item.content) === null || _c === void 0 ? void 0 : _c.message,
+        like: item.like,
+        createAt: item.ctime * 1000,
+        location: ((_e = (_d = item.reply_control) === null || _d === void 0 ? void 0 : _d.location) === null || _e === void 0 ? void 0 : _e.startsWith("IP属地：")) ? item.reply_control.location.slice(5) : undefined
+    };
+}
+async function getMusicComments(musicItem) {
+    var _a, _b;
+    const res = (await (axios_1.default.get("https://api.bilibili.com/x/v2/reply", {
+        params: {
+            type: 1,
+            oid: musicItem.aid,
+            mode: 3,
+            plat: 1
+        }
+    }))).data;
+    const data = res.data.replies;
+    const comments = [];
+    for (let i = 0; i < data.length; ++i) {
+        comments[i] = formatComment(data[i]);
+        if ((_a = data[i].replies) === null || _a === void 0 ? void 0 : _a.length) {
+            comments[i].replies = (_b = data[i]) === null || _b === void 0 ? void 0 : _b.replies.map(formatComment);
+        }
+    }
+    return {
+        isEnd: true,
+        data: comments
+    };
+}
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.1.15",
+    version: "0.2.0",
     author: "猫头猫",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",
@@ -479,4 +514,5 @@ module.exports = {
     getTopLists,
     getTopListDetail,
     importMusicSheet,
+    getMusicComments
 };

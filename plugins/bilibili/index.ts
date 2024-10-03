@@ -521,10 +521,54 @@ async function importMusicSheet(urlLike: string) {
   }));
 }
 
+function formatComment(item) {
+  return {
+    id: item.rpid,
+    // 用户名
+    nickName: item.member?.uname,
+    // 头像
+    avatar: item.member?.avatar,
+    // 评论内容
+    comment: item.content?.message,
+    // 点赞数
+    like: item.like,
+    // 评论时间
+    createAt: item.ctime * 1000,
+    // 地址
+    location: item.reply_control?.location?.startsWith("IP属地：") ? item.reply_control.location.slice(5): undefined
+  }
+}
+
+async function getMusicComments(musicItem) {
+  const res = (await (axios.get("https://api.bilibili.com/x/v2/reply", {
+    params: {
+      type: 1,
+      oid: musicItem.aid,
+      mode: 3,
+      plat: 1
+    }
+  }))).data;
+
+  const data = res.data.replies;
+
+  const comments = [];
+  for (let i = 0; i < data.length; ++i) {
+    comments[i] = formatComment(data[i]);
+    if (data[i].replies?.length) {
+      comments[i].replies = data[i]?.replies.map(formatComment);
+    }
+  }
+
+  return {
+    isEnd: true,
+    data: comments
+  }
+}
+
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.15",
+  version: "0.2.0",
   author: "猫头猫",
   cacheControl: "no-cache",
   srcUrl:
@@ -579,6 +623,7 @@ module.exports = {
   getTopLists,
   getTopListDetail,
   importMusicSheet,
+  getMusicComments
 };
 
 // searchAlbum('周杰伦', 2)
@@ -595,7 +640,7 @@ module.exports = {
 //   }
 // }
 
-// getMediaSource( {
+// getMediaComment( {
 //   id: 'BV1r7411p7R4',
 //   aid: 86670567,
 //   bvid: 'BV1r7411p7R4',
@@ -610,7 +655,7 @@ module.exports = {
 //     '重新修复伪4K，修复仅为提升观感',
 //   duration: 242,
 //   date: '2020-02-04'
-// }, 'standard').then(console.log)
+// }).then(console.log)
 
 // getArtistWorks({
 //   name: '不想睡觉猫头猫',
