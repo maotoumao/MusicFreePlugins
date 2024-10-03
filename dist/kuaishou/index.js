@@ -15,123 +15,134 @@ async function searchMusic(query, page) {
     var _a, _b;
     const body = {
         query: `fragment photoContent on PhotoEntity {
-        __typename
-        id
-        duration
-        caption
-        originCaption
-        likeCount
-        viewCount
-        commentCount
-        realLikeCount
-        coverUrl
-        photoUrl
-        photoH265Url
-        manifest
-        manifestH265
-        videoResource
-        coverUrls {
-          url
-          __typename
-        }
-        timestamp
-        expTag
-        animatedCoverUrl
-        distance
-        videoRatio
-        liked
-        stereoType
-        profileUserTopPhoto
-        musicBlocked
-      }
-      
-      fragment recoPhotoFragment on recoPhotoEntity {
-        __typename
-        id
-        duration
-        caption
-        originCaption
-        likeCount
-        viewCount
-        commentCount
-        realLikeCount
-        coverUrl
-        photoUrl
-        photoH265Url
-        manifest
-        manifestH265
-        videoResource
-        coverUrls {
-          url
-          __typename
-        }
-        timestamp
-        expTag
-        animatedCoverUrl
-        distance
-        videoRatio
-        liked
-        stereoType
-        profileUserTopPhoto
-        musicBlocked
-      }
-      
-      fragment feedContent on Feed {
-        type
-        author {
-          id
-          name
-          headerUrl
-          following
-          headerUrls {
-            url
-            __typename
-          }
-          __typename
-        }
-        photo {
-          ...photoContent
-          ...recoPhotoFragment
-          __typename
-        }
-        canAddComment
-        llsid
-        status
-        currentPcursor
-        tags {
-          type
-          name
-          __typename
-        }
-        __typename
-      }
-      
-      query visionSearchPhoto($keyword: String, $pcursor: String, $searchSessionId: String, $page: String, $webPageArea: String) {
-        visionSearchPhoto(keyword: $keyword, pcursor: $pcursor, searchSessionId: $searchSessionId, page: $page, webPageArea: $webPageArea) {
-          result
-          llsid
-          webPageArea
-          feeds {
-            ...feedContent
-            __typename
-          }
-          searchSessionId
-          pcursor
-          aladdinBanner {
-            imgUrl
-            link
-            __typename
-          }
-          __typename
-        }
-      }`,
+  __typename
+  id
+  duration
+  caption
+  originCaption
+  likeCount
+  viewCount
+  commentCount
+  realLikeCount
+  coverUrl
+  photoUrl
+  photoH265Url
+  manifest
+  manifestH265
+  videoResource
+  coverUrls {
+    url
+    __typename
+  }
+  timestamp
+  expTag
+  animatedCoverUrl
+  distance
+  videoRatio
+  liked
+  stereoType
+  profileUserTopPhoto
+  musicBlocked
+  riskTagContent
+  riskTagUrl
+}
+
+fragment recoPhotoFragment on recoPhotoEntity {
+  __typename
+  id
+  duration
+  caption
+  originCaption
+  likeCount
+  viewCount
+  commentCount
+  realLikeCount
+  coverUrl
+  photoUrl
+  photoH265Url
+  manifest
+  manifestH265
+  videoResource
+  coverUrls {
+    url
+    __typename
+  }
+  timestamp
+  expTag
+  animatedCoverUrl
+  distance
+  videoRatio
+  liked
+  stereoType
+  profileUserTopPhoto
+  musicBlocked
+  riskTagContent
+  riskTagUrl
+}
+
+fragment feedContent on Feed {
+  type
+  author {
+    id
+    name
+    headerUrl
+    following
+    headerUrls {
+      url
+      __typename
+    }
+    __typename
+  }
+  photo {
+    ...photoContent
+    ...recoPhotoFragment
+    __typename
+  }
+  canAddComment
+  llsid
+  status
+  currentPcursor
+  tags {
+    type
+    name
+    __typename
+  }
+  __typename
+}
+
+query visionSearchPhoto($keyword: String, $pcursor: String, $searchSessionId: String, $page: String, $webPageArea: String) {
+  visionSearchPhoto(keyword: $keyword, pcursor: $pcursor, searchSessionId: $searchSessionId, page: $page, webPageArea: $webPageArea) {
+    result
+    llsid
+    webPageArea
+    feeds {
+      ...feedContent
+      __typename
+    }
+    searchSessionId
+    pcursor
+    aladdinBanner {
+      imgUrl
+      link
+      __typename
+    }
+    __typename
+  }
+}`,
         variables: {
             keyword: query,
             page: "search",
             pcursor: `${page - 1}`,
         },
     };
-    const result = (await axios_1.default.post("https://www.kuaishou.com/graphql", body)).data.data.visionSearchPhoto;
+    const result = (await axios_1.default.post("https://www.kuaishou.com/graphql", body, {
+        headers: {
+            'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+            host: 'www.kuaishou.com',
+            origin: 'https://www.kuaishou.com',
+            referer: `https://www.kuaishou.com/search/video?searchKey=${encodeURIComponent((query))}`,
+        }
+    })).data.data.visionSearchPhoto;
     return {
         isEnd: !(result === null || result === void 0 ? void 0 : result.pcursor) || (result === null || result === void 0 ? void 0 : result.pcursor) === 'no_more',
         data: (_b = (_a = result === null || result === void 0 ? void 0 : result.feeds) === null || _a === void 0 ? void 0 : _a.map) === null || _b === void 0 ? void 0 : _b.call(_a, formatMusicItem)
@@ -139,7 +150,7 @@ async function searchMusic(query, page) {
 }
 module.exports = {
     platform: "快手",
-    version: "0.0.1",
+    version: "0.0.2",
     author: '猫头猫',
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/kuaishou/index.js",
     cacheControl: "no-cache",
