@@ -22,7 +22,8 @@
     "test-youtube": "ts-node -T ./plugins/youtube/index.ts",
     "test-xmly": "ts-node -T ./plugins/xmly/index.ts",
     "test-suno": "ts-node -T ./plugins/suno/index.ts",
-    "test-udio": "ts-node -T ./plugins/udio/index.ts"
+    "test-udio": "ts-node -T ./plugins/udio/index.ts",
+    "test-wxmp3": "ts-node -T ./plugins/wxmp3/index.ts"
   },
   "keywords": [],
   "author": {
@@ -39,6 +40,7 @@
     "cheerio": "^1.0.0-rc.12",
     "crypto-js": "^4.1.1",
     "dayjs": "^1.11.4",
+    "form-data": "^4.0.1",
     "he": "^1.2.0",
     "http-server": "^14.1.1",
     "https-proxy-agent": "^7.0.2",
