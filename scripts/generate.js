@@ -11,6 +11,7 @@ async function run() {
     await fs.mkdir(pluginPath);
     const bundledPlugins = await fs.readdir(basePath);
     const output = {
+        desc: "此链接为 MusicFree 插件，插件开发及使用方式参考 https://musicfree.upup.fun",
         plugins: []
     };
     await Promise.all(bundledPlugins.map(async (bundleFolder) => {
