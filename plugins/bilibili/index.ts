@@ -2,6 +2,7 @@ import axios from "axios";
 import dayjs = require("dayjs");
 import he = require("he");
 import CryptoJs = require("crypto-js");
+const {load} = require('cheerio');
 
 const headers = {
   "user-agent":
@@ -16,11 +17,11 @@ let cookie;
 async function getCid(bvid, aid) {
   const params = bvid
     ? {
-        bvid: bvid,
-      }
+      bvid: bvid,
+    }
     : {
-        aid: aid,
-      };
+      aid: aid,
+    };
   const cidRes = (
     await axios.get("https://api.bilibili.com/x/web-interface/view?%s", {
       headers: headers,
@@ -203,9 +204,63 @@ function getMixinKey(e) {
   );
 }
 
-function getRid(params) {
-  const npi =
-    "7cd084941338484aae1ad9425b84077c4932caff0ff746eab6f01bf08b70ac45";
+function hmacSha256(key, message) {
+  const hmac = CryptoJs.HmacSHA256(message, key);
+  return hmac.toString(CryptoJs.enc.Hex);
+}
+
+
+
+async function getBiliTicket(csrf) {
+  const ts = Math.floor(Date.now() / 1000);
+  const hexSign = hmacSha256('XgwSnGZ1p', `ts${ts}`);
+  const url = 'https://api.bilibili.com/bapis/bilibili.api.ticket.v1.Ticket/GenWebTicket';
+
+  try {
+    const response = await axios.post(url, null, {
+      params: {
+        key_id: 'ec02',
+        hexsign: hexSign,
+        'context[ts]': ts,
+        csrf: csrf || ''
+      },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0'
+      }
+    });
+
+    const data = await response.data;
+    return data.data;
+  } catch (e) {
+    throw e;
+  }
+}
+
+let img, sub, syncedTime: Date;
+async function getWBIKeys() {
+  if (img && sub && syncedTime && syncedTime.getDate() === (new Date()).getDate()) {
+    return {
+      img,
+      sub
+    }
+  } else {
+    const data = await getBiliTicket('');
+    img = data.nav.img;
+    img = img.slice(img.lastIndexOf('/') + 1, img.lastIndexOf('.'));
+    sub = data.nav.sub;
+    sub = sub.slice(sub.lastIndexOf('/') + 1, sub.lastIndexOf('.'))
+    syncedTime = new Date();
+    return {
+      img,
+      sub
+    }
+  }
+}
+
+
+async function getRid(params) {
+  const wbiKeys = await getWBIKeys();
+  const npi = wbiKeys.img + wbiKeys.sub;
   const o = getMixinKey(npi);
   const l = Object.keys(params).sort();
   let c = [];
@@ -213,21 +268,44 @@ function getRid(params) {
     let [h, p] = [l[d], params[l[d]]];
     p && "string" == typeof p && (p = p.replace(u, "")),
       null != p &&
-        c.push(
-          "".concat(encodeURIComponent(h), "=").concat(encodeURIComponent(p))
-        );
+      c.push(
+        "".concat(encodeURIComponent(h), "=").concat(encodeURIComponent(p))
+      );
   }
   const f = c.join("&");
   const w_rid = CryptoJs.MD5(f + o).toString();
   return w_rid;
 }
 
+
+let w_webid;
+let w_webid_date: Date;
+async function getWWebId(id: string) {
+  if (w_webid && w_webid_date && (Date.now() - w_webid_date.getTime() < 1000 * 60 * 60)) {
+    return w_webid;
+  }
+  const html = (await axios.get("https://space.bilibili.com/" + id, {
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+    }
+  })).data
+
+  const $ = load(html);
+  const content = $("#__RENDER_DATA__").text();
+  const jsonContent = JSON.parse(decodeURIComponent(content))
+  w_webid = jsonContent.access_id;
+  w_webid_date = new Date();
+  return w_webid;
+}
+
+
 async function getArtistWorks(artistItem, page, type) {
   const queryHeaders = {
     "user-agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
-    accept: "application/json, text/plain, */*",
-    "accept-encoding": "gzip, deflate, br",
+    accept: "*/*",
+    "accept-encoding": "gzip, deflate, br, zstd",
     origin: "https://space.bilibili.com",
     "sec-fetch-site": "same-site",
     "sec-fetch-mode": "cors",
@@ -236,6 +314,7 @@ async function getArtistWorks(artistItem, page, type) {
   };
 
   await getCookie();
+  const w_webid = await getWWebId(artistItem.id);
   const now = Math.round(Date.now() / 1e3);
   const params = {
     mid: artistItem.id,
@@ -252,10 +331,11 @@ async function getArtistWorks(artistItem, page, type) {
     dm_cover_img_str:
       "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgR1RYIDE2NTAgKDB4MDAwMDFGOTEpIERpcmVjdDNEMTEgdnNfNV8wIHBzXzVfMCwgRDNEMTEpR29vZ2xlIEluYy4gKE5WSURJQS",
     dm_img_inter: '{"ds":[],"wh":[0,0,0],"of":[0,0,0]}',
+    w_webid: w_webid,
     wts: now.toString(),
   };
 
-  const w_rid = getRid(params);
+  const w_rid = await getRid(params);
   const res = (
     await axios.get("https://api.bilibili.com/x/space/wbi/arc/search", {
       headers: {
@@ -268,6 +348,7 @@ async function getArtistWorks(artistItem, page, type) {
       },
     })
   ).data;
+  console.log(res);
 
   const resultData = res.data;
   const albums = resultData.list.vlist.map(formatMedia);
@@ -291,11 +372,11 @@ async function getMediaSource(
 
   const _params = musicItem.bvid
     ? {
-        bvid: musicItem.bvid,
-      }
+      bvid: musicItem.bvid,
+    }
     : {
-        aid: musicItem.aid,
-      };
+      aid: musicItem.aid,
+    };
 
   const res = (
     await axios.get("https://api.bilibili.com/x/player/playurl", {
@@ -521,10 +602,54 @@ async function importMusicSheet(urlLike: string) {
   }));
 }
 
+function formatComment(item) {
+  return {
+    id: item.rpid,
+    // 用户名
+    nickName: item.member?.uname,
+    // 头像
+    avatar: item.member?.avatar,
+    // 评论内容
+    comment: item.content?.message,
+    // 点赞数
+    like: item.like,
+    // 评论时间
+    createAt: item.ctime * 1000,
+    // 地址
+    location: item.reply_control?.location?.startsWith("IP属地：") ? item.reply_control.location.slice(5): undefined
+  }
+}
+
+async function getMusicComments(musicItem) {
+  const res = (await (axios.get("https://api.bilibili.com/x/v2/reply", {
+    params: {
+      type: 1,
+      oid: musicItem.aid,
+      mode: 3,
+      plat: 1
+    }
+  }))).data;
+
+  const data = res.data.replies;
+
+  const comments = [];
+  for (let i = 0; i < data.length; ++i) {
+    comments[i] = formatComment(data[i]);
+    if (data[i].replies?.length) {
+      comments[i].replies = data[i]?.replies.map(formatComment);
+    }
+  }
+
+  return {
+    isEnd: true,
+    data: comments
+  }
+}
+
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.1.15",
+  version: "0.2.1",
   author: "猫头猫",
   cacheControl: "no-cache",
   srcUrl:
@@ -579,6 +704,7 @@ module.exports = {
   getTopLists,
   getTopListDetail,
   importMusicSheet,
+  getMusicComments
 };
 
 // searchAlbum('周杰伦', 2)
@@ -595,7 +721,7 @@ module.exports = {
 //   }
 // }
 
-// getMediaSource( {
+// getMediaComment( {
 //   id: 'BV1r7411p7R4',
 //   aid: 86670567,
 //   bvid: 'BV1r7411p7R4',
@@ -610,7 +736,7 @@ module.exports = {
 //     '重新修复伪4K，修复仅为提升观感',
 //   duration: 242,
 //   date: '2020-02-04'
-// }, 'standard').then(console.log)
+// }).then(console.log)
 
 // getArtistWorks({
 //   name: '不想睡觉猫头猫',

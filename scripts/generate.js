@@ -11,6 +11,7 @@ async function run() {
     await fs.mkdir(pluginPath);
     const bundledPlugins = await fs.readdir(basePath);
     const output = {
+        desc: "此链接为 MusicFree 插件，插件开发及使用方式参考 https://musicfree.upup.fun",
         plugins: []
     };
     await Promise.all(bundledPlugins.map(async (bundleFolder) => {
@@ -21,8 +22,8 @@ async function run() {
                 const origin = await fs.readFile(targetPluginPath, 'utf-8');
                 const mexports = origin.match(/module.exports\s*=\s*([\s\S]*)$/)[1];
                 const platform = mexports.match(/platform:\s*['"`](.*)['"`]/)[1]
-                const version = mexports.match(/version:\s*['"`](.*)['"`]/)[1]
-                const srcUrl = mexports.match(/srcUrl:\s*['"`](.*)['"`]/)[1]
+                const version = mexports.match(/version:\s*['"`](.*)['"`]/)?.[1]
+                const srcUrl = mexports.match(/srcUrl:\s*['"`](.*)['"`]/)?.[1]
 
                 output.plugins.push({
                     name: platform,
