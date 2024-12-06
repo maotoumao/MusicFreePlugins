@@ -621,12 +621,19 @@ function formatComment(item) {
 }
 
 async function getMusicComments(musicItem) {
-  const res = (await (axios.get("https://api.bilibili.com/x/v2/reply", {
+  const params = {
+    type: 1,
+    mode: 3,
+    oid: musicItem.aid,
+    plat: 1,
+    web_location: 1315875,
+    wts: Math.floor(Date.now() / 1000)
+  };
+  const w_rid = await getRid(params);
+  const res = (await (axios.get("https://api.bilibili.com/x/v2/reply/wbi/main", {
     params: {
-      type: 1,
-      oid: musicItem.aid,
-      mode: 3,
-      plat: 1
+      ...params,
+      w_rid
     }
   }))).data;
 
@@ -649,7 +656,7 @@ async function getMusicComments(musicItem) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.2.1",
+  version: "0.2.2",
   author: "猫头猫",
   cacheControl: "no-cache",
   srcUrl:
