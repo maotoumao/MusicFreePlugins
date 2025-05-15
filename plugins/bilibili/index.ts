@@ -314,7 +314,7 @@ async function getArtistWorks(artistItem, page, type) {
   };
 
   await getCookie();
-  const w_webid = await getWWebId(artistItem.id);
+
   const now = Math.round(Date.now() / 1e3);
   const params = {
     mid: artistItem.id,
@@ -331,7 +331,6 @@ async function getArtistWorks(artistItem, page, type) {
     dm_cover_img_str:
       "QU5HTEUgKE5WSURJQSwgTlZJRElBIEdlRm9yY2UgR1RYIDE2NTAgKDB4MDAwMDFGOTEpIERpcmVjdDNEMTEgdnNfNV8wIHBzXzVfMCwgRDNEMTEpR29vZ2xlIEluYy4gKE5WSURJQS",
     dm_img_inter: '{"ds":[],"wh":[0,0,0],"of":[0,0,0]}',
-    w_webid: w_webid,
     wts: now.toString(),
   };
 
@@ -656,7 +655,7 @@ async function getMusicComments(musicItem) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.2.2",
+  version: "0.2.3",
   author: "猫头猫",
   cacheControl: "no-cache",
   srcUrl:
