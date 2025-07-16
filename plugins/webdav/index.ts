@@ -6,12 +6,13 @@ interface ICachedData {
   password?: string;
   searchPath?: string;
   searchPathList?: string[];
+  searchMaxDepth?: number;
   cacheFileList?: FileStat[];
 }
 let cachedData: ICachedData = {};
 
 function getClient() {
-  const { url, username, password, searchPath } =
+  const { url, username, password, searchPath, searchMaxDepth } =
     env?.getUserVariables?.() ?? {};
   if (!(url && username && password)) {
     return null;
@@ -22,7 +23,8 @@ function getClient() {
       cachedData.url === url &&
       cachedData.username === username &&
       cachedData.password === password &&
-      cachedData.searchPath === searchPath
+      cachedData.searchPath === searchPath &&
+      cachedData.searchMaxDepth === Number.parseInt(searchMaxDepth)
     )
   ) {
     cachedData.url = url;
@@ -31,6 +33,7 @@ function getClient() {
     cachedData.searchPath = searchPath;
     cachedData.searchPathList = searchPath?.split?.(",");
     cachedData.cacheFileList = null;
+    cachedData.searchMaxDepth = Number.parseInt(searchMaxDepth) || null;
   }
 
   return createClient(url, {
@@ -38,6 +41,59 @@ function getClient() {
     username,
     password,
   });
+}
+
+async function traverseDirectory(
+  dirPath: string,
+  options: {
+    filterFn?: (file: FileStat) => boolean;
+    maxDepth?: number;
+  } = {}
+): Promise<FileStat[]> {
+  const { filterFn, maxDepth = 2 } = options;
+  const client = getClient();
+  if (!client) return [];
+
+  const traverseDirectoryInner = async function (
+    dirPath: string,
+    allFiles: FileStat[],
+    filterFn: (file: FileStat) => boolean,
+    maxDepth: number,
+    currentDepth: number
+  ): Promise<FileStat[]> {
+    const client = getClient();
+
+    if (currentDepth > maxDepth) {
+      return allFiles;
+    }
+
+    const items = (await client.getDirectoryContents(dirPath)) as FileStat[];
+
+    for (const item of items) {
+      if (item.type === "directory") {
+        // 递归遍历子目录，深度 +1
+        await traverseDirectoryInner(
+          item.filename,
+          allFiles,
+          filterFn,
+          maxDepth,
+          currentDepth + 1
+        );
+      } else {
+        if (filterFn && !filterFn(item)) continue;
+        allFiles.push(item);
+      }
+    }
+
+    return allFiles;
+  };
+  return traverseDirectoryInner(
+    dirPath,
+    [],
+    filterFn || (() => true),
+    maxDepth,
+    0
+  );
 }
 
 async function searchMusic(query: string) {
@@ -50,9 +106,11 @@ async function searchMusic(query: string) {
 
     for (let search of searchPathList) {
       try {
-        const fileItems = (
-          (await client.getDirectoryContents(search)) as FileStat[]
-        ).filter((it) => it.type === "file" && it.mime.startsWith("audio"));
+        const fileItems = await traverseDirectory(search, {
+          filterFn: (file) => file.mime?.startsWith("audio"),
+          maxDepth: cachedData.searchMaxDepth,
+        });
+
         result = [...result, ...fileItems];
       } catch {}
     }
@@ -86,9 +144,10 @@ async function getTopLists() {
 
 async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   const client = getClient();
-  const fileItems = (
-    (await client.getDirectoryContents(topListItem.id)) as FileStat[]
-  ).filter((it) => it.type === "file" && it.mime.startsWith("audio"));
+  const fileItems = await traverseDirectory(topListItem.id, {
+    filterFn: (file) => file.mime?.startsWith("audio"),
+    maxDepth: cachedData.searchMaxDepth,
+  });
 
   return {
     musicList: fileItems.map((it) => ({
@@ -122,8 +181,12 @@ module.exports = {
       key: "searchPath",
       name: "存放歌曲的路径",
     },
+    {
+      key: "searchMaxDepth",
+      name: "递归搜索最大深度",
+    }
   ],
-  version: "0.0.2",
+  version: "0.0.3",
   supportedSearchType: ["music"],
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/webdav/index.js",
