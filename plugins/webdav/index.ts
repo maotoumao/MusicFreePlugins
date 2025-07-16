@@ -96,8 +96,7 @@ async function traverseDirectory(
   );
 }
 
-async function searchMusic(query: string) {
-  const client = getClient();
+async function searchFiles(query: string, type: string) {
   if (!cachedData.cacheFileList) {
     const searchPathList = cachedData.searchPathList?.length
       ? cachedData.searchPathList
@@ -107,7 +106,14 @@ async function searchMusic(query: string) {
     for (let search of searchPathList) {
       try {
         const fileItems = await traverseDirectory(search, {
-          filterFn: (file) => file.mime?.startsWith("audio"),
+          filterFn: (file) => {
+            if (type === "music") {
+              return file.mime?.startsWith("audio");
+            } else if (type === "lyric") {
+              return file.basename.endsWith(".lrc");
+            }
+            return false;
+          },
           maxDepth: cachedData.searchMaxDepth,
         });
 
@@ -159,6 +165,23 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   };
 }
 
+function tryDetectAndDecodeBuffer(buffer) {
+  // 常见的LRC文件编码
+  const encodingsToTry = ["utf8", "gbk", "gb18030", "big5", "utf16le"];
+
+  for (const encoding of encodingsToTry) {
+    try {
+      const decoder = new TextDecoder(encoding, { fatal: true });
+      return decoder.decode(buffer);
+    } catch (e) {
+      continue;
+    }
+  }
+
+  // 如果所有编码都失败，最后尝试utf8并忽略错误（可能会有乱码但不会崩溃）
+  return new TextDecoder("utf8", { fatal: false }).decode(buffer);
+}
+
 module.exports = {
   platform: "WebDAV",
   author: "猫头猫",
@@ -184,16 +207,16 @@ module.exports = {
     {
       key: "searchMaxDepth",
       name: "递归搜索最大深度",
-    }
+    },
   ],
   version: "0.0.3",
-  supportedSearchType: ["music"],
+  supportedSearchType: ["music", "lyric"],
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/webdav/index.js",
   cacheControl: "no-cache",
   search(query, page, type) {
-    if (type === "music") {
-      return searchMusic(query);
+    if (type === "music" || type === "lyric") {
+      return searchFiles(query, type);
     }
   },
   getTopLists,
@@ -203,5 +226,24 @@ module.exports = {
     return {
       url: client.getFileDownloadLink(musicItem.id),
     };
+  },
+  async getLyric(musicItem) {
+    const client = getClient();
+    // 替换后缀格式为lrc文件格式
+    if (!musicItem.id.endsWith(".lrc")) {
+      musicItem.id = musicItem.id.replace(/\.[^.]+$/, ".lrc");
+    }
+    // 获取lrc文件内容
+    try {
+      const buffer = await client.getFileContents(musicItem.id, {
+        format: "binary",
+      });
+
+      // 尝试检测编码并解码
+      const rawLrc = tryDetectAndDecodeBuffer(buffer);
+      return { rawLrc };
+    } catch (error) {
+      return { rawLrc: `Failed to read or decode LRC file: ${error}` }; // 返回空歌词或抛出错误，根据你的需求决定
+    }
   },
 };

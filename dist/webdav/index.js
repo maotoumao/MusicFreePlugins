@@ -52,9 +52,8 @@ async function traverseDirectory(dirPath, options = {}) {
     };
     return traverseDirectoryInner(dirPath, [], filterFn || (() => true), maxDepth, 0);
 }
-async function searchMusic(query) {
+async function searchFiles(query, type) {
     var _a, _b;
-    const client = getClient();
     if (!cachedData.cacheFileList) {
         const searchPathList = ((_a = cachedData.searchPathList) === null || _a === void 0 ? void 0 : _a.length)
             ? cachedData.searchPathList
@@ -63,7 +62,16 @@ async function searchMusic(query) {
         for (let search of searchPathList) {
             try {
                 const fileItems = await traverseDirectory(search, {
-                    filterFn: (file) => { var _a; return (_a = file.mime) === null || _a === void 0 ? void 0 : _a.startsWith("audio"); },
+                    filterFn: (file) => {
+                        var _a;
+                        if (type === "music") {
+                            return (_a = file.mime) === null || _a === void 0 ? void 0 : _a.startsWith("audio");
+                        }
+                        else if (type === "lyric") {
+                            return file.basename.endsWith(".lrc");
+                        }
+                        return false;
+                    },
                     maxDepth: cachedData.searchMaxDepth,
                 });
                 result = [...result, ...fileItems];
@@ -110,6 +118,19 @@ async function getTopListDetail(topListItem) {
         })),
     };
 }
+function tryDetectAndDecodeBuffer(buffer) {
+    const encodingsToTry = ["utf8", "gbk", "gb18030", "big5", "utf16le"];
+    for (const encoding of encodingsToTry) {
+        try {
+            const decoder = new TextDecoder(encoding, { fatal: true });
+            return decoder.decode(buffer);
+        }
+        catch (e) {
+            continue;
+        }
+    }
+    return new TextDecoder("utf8", { fatal: false }).decode(buffer);
+}
 module.exports = {
     platform: "WebDAV",
     author: "猫头猫",
@@ -135,15 +156,15 @@ module.exports = {
         {
             key: "searchMaxDepth",
             name: "递归搜索最大深度",
-        }
+        },
     ],
     version: "0.0.3",
-    supportedSearchType: ["music"],
+    supportedSearchType: ["music", "lyric"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/webdav/index.js",
     cacheControl: "no-cache",
     search(query, page, type) {
-        if (type === "music") {
-            return searchMusic(query);
+        if (type === "music" || type === "lyric") {
+            return searchFiles(query, type);
         }
     },
     getTopLists,
@@ -153,5 +174,21 @@ module.exports = {
         return {
             url: client.getFileDownloadLink(musicItem.id),
         };
+    },
+    async getLyric(musicItem) {
+        const client = getClient();
+        if (!musicItem.id.endsWith(".lrc")) {
+            musicItem.id = musicItem.id.replace(/\.[^.]+$/, ".lrc");
+        }
+        try {
+            const buffer = await client.getFileContents(musicItem.id, {
+                format: "binary",
+            });
+            const rawLrc = tryDetectAndDecodeBuffer(buffer);
+            return { rawLrc };
+        }
+        catch (error) {
+            return { rawLrc: `Failed to read or decode LRC file: ${error}` };
+        }
     },
 };
