@@ -4,20 +4,22 @@ const webdav_1 = require("webdav");
 let cachedData = {};
 function getClient() {
     var _a, _b, _c;
-    const { url, username, password, searchPath } = (_b = (_a = env === null || env === void 0 ? void 0 : env.getUserVariables) === null || _a === void 0 ? void 0 : _a.call(env)) !== null && _b !== void 0 ? _b : {};
+    const { url, username, password, searchPath, searchMaxDepth } = (_b = (_a = env === null || env === void 0 ? void 0 : env.getUserVariables) === null || _a === void 0 ? void 0 : _a.call(env)) !== null && _b !== void 0 ? _b : {};
     if (!(url && username && password)) {
         return null;
     }
     if (!(cachedData.url === url &&
         cachedData.username === username &&
         cachedData.password === password &&
-        cachedData.searchPath === searchPath)) {
+        cachedData.searchPath === searchPath &&
+        cachedData.searchMaxDepth === Number.parseInt(searchMaxDepth))) {
         cachedData.url = url;
         cachedData.username = username;
         cachedData.password = password;
         cachedData.searchPath = searchPath;
         cachedData.searchPathList = (_c = searchPath === null || searchPath === void 0 ? void 0 : searchPath.split) === null || _c === void 0 ? void 0 : _c.call(searchPath, ",");
         cachedData.cacheFileList = null;
+        cachedData.searchMaxDepth = Number.parseInt(searchMaxDepth) || null;
     }
     return (0, webdav_1.createClient)(url, {
         authType: webdav_1.AuthType.Password,
@@ -25,9 +27,33 @@ function getClient() {
         password,
     });
 }
-async function searchMusic(query) {
-    var _a, _b;
+async function traverseDirectory(dirPath, options = {}) {
+    const { filterFn, maxDepth = 2 } = options;
     const client = getClient();
+    if (!client)
+        return [];
+    const traverseDirectoryInner = async function (dirPath, allFiles, filterFn, maxDepth, currentDepth) {
+        const client = getClient();
+        if (currentDepth > maxDepth) {
+            return allFiles;
+        }
+        const items = (await client.getDirectoryContents(dirPath));
+        for (const item of items) {
+            if (item.type === "directory") {
+                await traverseDirectoryInner(item.filename, allFiles, filterFn, maxDepth, currentDepth + 1);
+            }
+            else {
+                if (filterFn && !filterFn(item))
+                    continue;
+                allFiles.push(item);
+            }
+        }
+        return allFiles;
+    };
+    return traverseDirectoryInner(dirPath, [], filterFn || (() => true), maxDepth, 0);
+}
+async function searchFiles(query, type) {
+    var _a, _b;
     if (!cachedData.cacheFileList) {
         const searchPathList = ((_a = cachedData.searchPathList) === null || _a === void 0 ? void 0 : _a.length)
             ? cachedData.searchPathList
@@ -35,7 +61,19 @@ async function searchMusic(query) {
         let result = [];
         for (let search of searchPathList) {
             try {
-                const fileItems = (await client.getDirectoryContents(search)).filter((it) => it.type === "file" && it.mime.startsWith("audio"));
+                const fileItems = await traverseDirectory(search, {
+                    filterFn: (file) => {
+                        var _a;
+                        if (type === "music") {
+                            return (_a = file.mime) === null || _a === void 0 ? void 0 : _a.startsWith("audio");
+                        }
+                        else if (type === "lyric") {
+                            return file.basename.endsWith(".lrc");
+                        }
+                        return false;
+                    },
+                    maxDepth: cachedData.searchMaxDepth,
+                });
                 result = [...result, ...fileItems];
             }
             catch (_c) { }
@@ -67,7 +105,10 @@ async function getTopLists() {
 }
 async function getTopListDetail(topListItem) {
     const client = getClient();
-    const fileItems = (await client.getDirectoryContents(topListItem.id)).filter((it) => it.type === "file" && it.mime.startsWith("audio"));
+    const fileItems = await traverseDirectory(topListItem.id, {
+        filterFn: (file) => { var _a; return (_a = file.mime) === null || _a === void 0 ? void 0 : _a.startsWith("audio"); },
+        maxDepth: cachedData.searchMaxDepth,
+    });
     return {
         musicList: fileItems.map((it) => ({
             title: it.basename,
@@ -76,6 +117,19 @@ async function getTopListDetail(topListItem) {
             album: "未知专辑",
         })),
     };
+}
+function tryDetectAndDecodeBuffer(buffer) {
+    const encodingsToTry = ["utf8", "gbk", "gb18030", "big5", "utf16le"];
+    for (const encoding of encodingsToTry) {
+        try {
+            const decoder = new TextDecoder(encoding, { fatal: true });
+            return decoder.decode(buffer);
+        }
+        catch (e) {
+            continue;
+        }
+    }
+    return new TextDecoder("utf8", { fatal: false }).decode(buffer);
 }
 module.exports = {
     platform: "WebDAV",
@@ -99,14 +153,18 @@ module.exports = {
             key: "searchPath",
             name: "存放歌曲的路径",
         },
+        {
+            key: "searchMaxDepth",
+            name: "递归搜索最大深度",
+        },
     ],
-    version: "0.0.2",
-    supportedSearchType: ["music"],
+    version: "0.0.3",
+    supportedSearchType: ["music", "lyric"],
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/webdav/index.js",
     cacheControl: "no-cache",
     search(query, page, type) {
-        if (type === "music") {
-            return searchMusic(query);
+        if (type === "music" || type === "lyric") {
+            return searchFiles(query, type);
         }
     },
     getTopLists,
@@ -116,5 +174,21 @@ module.exports = {
         return {
             url: client.getFileDownloadLink(musicItem.id),
         };
+    },
+    async getLyric(musicItem) {
+        const client = getClient();
+        if (!musicItem.id.endsWith(".lrc")) {
+            musicItem.id = musicItem.id.replace(/\.[^.]+$/, ".lrc");
+        }
+        try {
+            const buffer = await client.getFileContents(musicItem.id, {
+                format: "binary",
+            });
+            const rawLrc = tryDetectAndDecodeBuffer(buffer);
+            return { rawLrc };
+        }
+        catch (error) {
+            return { rawLrc: `Failed to read or decode LRC file: ${error}` };
+        }
     },
 };

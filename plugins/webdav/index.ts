@@ -6,12 +6,13 @@ interface ICachedData {
   password?: string;
   searchPath?: string;
   searchPathList?: string[];
+  searchMaxDepth?: number;
   cacheFileList?: FileStat[];
 }
 let cachedData: ICachedData = {};
 
 function getClient() {
-  const { url, username, password, searchPath } =
+  const { url, username, password, searchPath, searchMaxDepth } =
     env?.getUserVariables?.() ?? {};
   if (!(url && username && password)) {
     return null;
@@ -22,7 +23,8 @@ function getClient() {
       cachedData.url === url &&
       cachedData.username === username &&
       cachedData.password === password &&
-      cachedData.searchPath === searchPath
+      cachedData.searchPath === searchPath &&
+      cachedData.searchMaxDepth === Number.parseInt(searchMaxDepth)
     )
   ) {
     cachedData.url = url;
@@ -31,6 +33,7 @@ function getClient() {
     cachedData.searchPath = searchPath;
     cachedData.searchPathList = searchPath?.split?.(",");
     cachedData.cacheFileList = null;
+    cachedData.searchMaxDepth = Number.parseInt(searchMaxDepth) || null;
   }
 
   return createClient(url, {
@@ -40,8 +43,60 @@ function getClient() {
   });
 }
 
-async function searchMusic(query: string) {
+async function traverseDirectory(
+  dirPath: string,
+  options: {
+    filterFn?: (file: FileStat) => boolean;
+    maxDepth?: number;
+  } = {}
+): Promise<FileStat[]> {
+  const { filterFn, maxDepth = 2 } = options;
   const client = getClient();
+  if (!client) return [];
+
+  const traverseDirectoryInner = async function (
+    dirPath: string,
+    allFiles: FileStat[],
+    filterFn: (file: FileStat) => boolean,
+    maxDepth: number,
+    currentDepth: number
+  ): Promise<FileStat[]> {
+    const client = getClient();
+
+    if (currentDepth > maxDepth) {
+      return allFiles;
+    }
+
+    const items = (await client.getDirectoryContents(dirPath)) as FileStat[];
+
+    for (const item of items) {
+      if (item.type === "directory") {
+        // 递归遍历子目录，深度 +1
+        await traverseDirectoryInner(
+          item.filename,
+          allFiles,
+          filterFn,
+          maxDepth,
+          currentDepth + 1
+        );
+      } else {
+        if (filterFn && !filterFn(item)) continue;
+        allFiles.push(item);
+      }
+    }
+
+    return allFiles;
+  };
+  return traverseDirectoryInner(
+    dirPath,
+    [],
+    filterFn || (() => true),
+    maxDepth,
+    0
+  );
+}
+
+async function searchFiles(query: string, type: string) {
   if (!cachedData.cacheFileList) {
     const searchPathList = cachedData.searchPathList?.length
       ? cachedData.searchPathList
@@ -50,9 +105,18 @@ async function searchMusic(query: string) {
 
     for (let search of searchPathList) {
       try {
-        const fileItems = (
-          (await client.getDirectoryContents(search)) as FileStat[]
-        ).filter((it) => it.type === "file" && it.mime.startsWith("audio"));
+        const fileItems = await traverseDirectory(search, {
+          filterFn: (file) => {
+            if (type === "music") {
+              return file.mime?.startsWith("audio");
+            } else if (type === "lyric") {
+              return file.basename.endsWith(".lrc");
+            }
+            return false;
+          },
+          maxDepth: cachedData.searchMaxDepth,
+        });
+
         result = [...result, ...fileItems];
       } catch {}
     }
@@ -86,9 +150,10 @@ async function getTopLists() {
 
 async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
   const client = getClient();
-  const fileItems = (
-    (await client.getDirectoryContents(topListItem.id)) as FileStat[]
-  ).filter((it) => it.type === "file" && it.mime.startsWith("audio"));
+  const fileItems = await traverseDirectory(topListItem.id, {
+    filterFn: (file) => file.mime?.startsWith("audio"),
+    maxDepth: cachedData.searchMaxDepth,
+  });
 
   return {
     musicList: fileItems.map((it) => ({
@@ -98,6 +163,23 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
       album: "未知专辑",
     })),
   };
+}
+
+function tryDetectAndDecodeBuffer(buffer) {
+  // 常见的LRC文件编码
+  const encodingsToTry = ["utf8", "gbk", "gb18030", "big5", "utf16le"];
+
+  for (const encoding of encodingsToTry) {
+    try {
+      const decoder = new TextDecoder(encoding, { fatal: true });
+      return decoder.decode(buffer);
+    } catch (e) {
+      continue;
+    }
+  }
+
+  // 如果所有编码都失败，最后尝试utf8并忽略错误（可能会有乱码但不会崩溃）
+  return new TextDecoder("utf8", { fatal: false }).decode(buffer);
 }
 
 module.exports = {
@@ -122,15 +204,19 @@ module.exports = {
       key: "searchPath",
       name: "存放歌曲的路径",
     },
+    {
+      key: "searchMaxDepth",
+      name: "递归搜索最大深度",
+    },
   ],
-  version: "0.0.2",
-  supportedSearchType: ["music"],
+  version: "0.0.3",
+  supportedSearchType: ["music", "lyric"],
   srcUrl:
     "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/webdav/index.js",
   cacheControl: "no-cache",
   search(query, page, type) {
-    if (type === "music") {
-      return searchMusic(query);
+    if (type === "music" || type === "lyric") {
+      return searchFiles(query, type);
     }
   },
   getTopLists,
@@ -140,5 +226,24 @@ module.exports = {
     return {
       url: client.getFileDownloadLink(musicItem.id),
     };
+  },
+  async getLyric(musicItem) {
+    const client = getClient();
+    // 替换后缀格式为lrc文件格式
+    if (!musicItem.id.endsWith(".lrc")) {
+      musicItem.id = musicItem.id.replace(/\.[^.]+$/, ".lrc");
+    }
+    // 获取lrc文件内容
+    try {
+      const buffer = await client.getFileContents(musicItem.id, {
+        format: "binary",
+      });
+
+      // 尝试检测编码并解码
+      const rawLrc = tryDetectAndDecodeBuffer(buffer);
+      return { rawLrc };
+    } catch (error) {
+      return { rawLrc: `Failed to read or decode LRC file: ${error}` }; // 返回空歌词或抛出错误，根据你的需求决定
+    }
   },
 };
