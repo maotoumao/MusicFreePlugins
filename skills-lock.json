@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "musicfree-plugin-dev": {
+      "source": "maotoumao/musicfree-skills",
+      "sourceType": "github",
+      "computedHash": "6b5a6c639a78107544234cef433892b7fec3ca368d348610e87d9f402cb3d6bb"
+    }
+  }
+}
