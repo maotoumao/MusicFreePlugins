@@ -4,25 +4,33 @@ const axios_1 = require("axios");
 const dayjs = require("dayjs");
 const he = require("he");
 const CryptoJs = require("crypto-js");
-const { load } = require('cheerio');
+const { load } = require("cheerio");
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
 const headers = {
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+    "user-agent": UA,
     accept: "*/*",
     "accept-encoding": "gzip, deflate, br",
     "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
 };
-let cookie;
+let cookie = null;
+async function getCookie() {
+    if (!cookie) {
+        cookie = (await axios_1.default.get("https://api.bilibili.com/x/frontend/finger/spi", {
+            headers: { "User-Agent": UA },
+        })).data.data;
+    }
+    return cookie;
+}
+function getCookieString() {
+    if (!cookie)
+        return "";
+    return `buvid3=${cookie.b_3};buvid4=${cookie.b_4}`;
+}
 async function getCid(bvid, aid) {
-    const params = bvid
-        ? {
-            bvid: bvid,
-        }
-        : {
-            aid: aid,
-        };
-    const cidRes = (await axios_1.default.get("https://api.bilibili.com/x/web-interface/view?%s", {
-        headers: headers,
-        params: params,
+    const params = bvid ? { bvid } : { aid };
+    const cidRes = (await axios_1.default.get("https://api.bilibili.com/x/web-interface/view", {
+        headers,
+        params,
     })).data;
     return cidRes;
 }
@@ -31,7 +39,7 @@ function durationToSec(duration) {
         return duration;
     }
     if (typeof duration === "string") {
-        var dur = duration.split(":");
+        const dur = duration.split(":");
         return dur.reduce(function (prev, curr) {
             return 60 * prev + +curr;
         }, 0);
@@ -39,7 +47,7 @@ function durationToSec(duration) {
     return 0;
 }
 const searchHeaders = {
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+    "user-agent": UA,
     accept: "application/json, text/plain, */*",
     "accept-encoding": "gzip, deflate, br",
     origin: "https://search.bilibili.com",
@@ -49,24 +57,15 @@ const searchHeaders = {
     referer: "https://search.bilibili.com/",
     "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
 };
-async function getCookie() {
-    if (!cookie) {
-        cookie = (await axios_1.default.get("https://api.bilibili.com/x/frontend/finger/spi", {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/114.0.0.0",
-            },
-        })).data.data;
-    }
-}
 const pageSize = 20;
 async function searchBase(keyword, page, searchType) {
     await getCookie();
     const params = {
         context: "",
-        page: page,
+        page,
         order: "",
         page_size: pageSize,
-        keyword: keyword,
+        keyword,
         duration: "",
         tids_1: "",
         tids_2: "",
@@ -80,8 +79,8 @@ async function searchBase(keyword, page, searchType) {
         dynamic_offset: 0,
     };
     const res = (await axios_1.default.get("https://api.bilibili.com/x/web-interface/search/type", {
-        headers: Object.assign(Object.assign({}, searchHeaders), { cookie: `buvid3=${cookie.b_3};buvid4=${cookie.b_4}` }),
-        params: params,
+        headers: Object.assign(Object.assign({}, searchHeaders), { cookie: getCookieString() }),
+        params,
     })).data;
     return res.data;
 }
@@ -243,7 +242,7 @@ async function getWWebId(id) {
     }
     const html = (await axios_1.default.get("https://space.bilibili.com/" + id, {
         headers: {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+            "user-agent": UA,
         }
     })).data;
     const $ = load(html);
@@ -255,7 +254,7 @@ async function getWWebId(id) {
 }
 async function getArtistWorks(artistItem, page, type) {
     const queryHeaders = {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+        "user-agent": UA,
         accept: "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
         origin: "https://space.bilibili.com",
@@ -284,10 +283,9 @@ async function getArtistWorks(artistItem, page, type) {
     };
     const w_rid = await getRid(params);
     const res = (await axios_1.default.get("https://api.bilibili.com/x/space/wbi/arc/search", {
-        headers: Object.assign(Object.assign({}, queryHeaders), { cookie: `buvid3=${cookie.b_3};buvid4=${cookie.b_4}` }),
+        headers: Object.assign(Object.assign({}, queryHeaders), { cookie: getCookieString() }),
         params: Object.assign(Object.assign({}, params), { w_rid }),
     })).data;
-    console.log(res);
     const resultData = res.data;
     const albums = resultData.list.vlist.map(formatMedia);
     return {
@@ -296,7 +294,7 @@ async function getArtistWorks(artistItem, page, type) {
     };
 }
 async function getMediaSource(musicItem, quality) {
-    var _a;
+    var _a, _b, _c, _d, _e, _f;
     let cid = musicItem.cid;
     if (!cid) {
         cid = (await getCid(musicItem.bvid, musicItem.aid)).data.cid;
@@ -316,19 +314,23 @@ async function getMediaSource(musicItem, quality) {
     if (res.data.dash) {
         const audios = res.data.dash.audio;
         audios.sort((a, b) => a.bandwidth - b.bandwidth);
+        const len = audios.length;
         switch (quality) {
             case "low":
-                url = audios[0].baseUrl;
+                url = (_a = audios[0]) === null || _a === void 0 ? void 0 : _a.baseUrl;
                 break;
             case "standard":
-                url = audios[1].baseUrl;
+                url = (_b = audios[Math.min(1, len - 1)]) === null || _b === void 0 ? void 0 : _b.baseUrl;
                 break;
             case "high":
-                url = audios[2].baseUrl;
+                url = (_c = audios[Math.min(2, len - 1)]) === null || _c === void 0 ? void 0 : _c.baseUrl;
                 break;
             case "super":
-                url = audios[3].baseUrl;
+                url = (_d = audios[len - 1]) === null || _d === void 0 ? void 0 : _d.baseUrl;
                 break;
+        }
+        if (!url) {
+            url = (_e = audios[len - 1]) === null || _e === void 0 ? void 0 : _e.baseUrl;
         }
     }
     else {
@@ -341,9 +343,9 @@ async function getMediaSource(musicItem, quality) {
         host: hostUrl.substring(0, hostUrl.indexOf("/")),
         "accept-encoding": "gzip, deflate, br",
         connection: "keep-alive",
-        referer: "https://www.bilibili.com/video/".concat((_a = (musicItem.bvid !== null && musicItem.bvid !== undefined
+        referer: "https://www.bilibili.com/video/".concat((_f = (musicItem.bvid !== null && musicItem.bvid !== undefined
             ? musicItem.bvid
-            : musicItem.aid)) !== null && _a !== void 0 ? _a : ""),
+            : musicItem.aid)) !== null && _f !== void 0 ? _f : ""),
     };
     return {
         url: url,
@@ -351,6 +353,7 @@ async function getMediaSource(musicItem, quality) {
     };
 }
 async function getTopLists() {
+    await getCookie();
     const precious = {
         title: "入站必刷",
         data: [
@@ -366,9 +369,7 @@ async function getTopLists() {
         data: [],
     };
     const weeklyRes = await axios_1.default.get("https://api.bilibili.com/x/web-interface/popular/series/list", {
-        headers: {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-        },
+        headers: Object.assign(Object.assign({}, headers), { cookie: getCookieString() }),
     });
     weekly.data = weeklyRes.data.data.list.slice(0, 8).map((e) => ({
         id: `popular/series/one?number=${e.number}`,
@@ -461,10 +462,12 @@ async function getTopLists() {
     return [weekly, precious, board];
 }
 async function getTopListDetail(topListItem) {
+    var _a;
+    await getCookie();
     const res = await axios_1.default.get(`https://api.bilibili.com/x/web-interface/${topListItem.id}`, {
-        headers: Object.assign(Object.assign({}, headers), { referer: "https://www.bilibili.com/" }),
+        headers: Object.assign(Object.assign({}, headers), { referer: "https://www.bilibili.com/", cookie: getCookieString() }),
     });
-    return Object.assign(Object.assign({}, topListItem), { musicList: res.data.data.list.map(formatMedia) });
+    return Object.assign(Object.assign({}, topListItem), { musicList: (((_a = res.data.data) === null || _a === void 0 ? void 0 : _a.list) || []).map(formatMedia) });
 }
 async function importMusicSheet(urlLike) {
     var _a, _b, _c, _d;
@@ -541,7 +544,7 @@ async function getMusicComments(musicItem) {
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
-    version: "0.2.3",
+    version: "0.3.0",
     author: "猫头猫",
     cacheControl: "no-cache",
     srcUrl: "https://gitee.com/maotoumao/MusicFreePlugins/raw/v0.1/dist/bilibili/index.js",

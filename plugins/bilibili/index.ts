@@ -2,54 +2,64 @@ import axios from "axios";
 import dayjs = require("dayjs");
 import he = require("he");
 import CryptoJs = require("crypto-js");
-const {load} = require('cheerio');
+const { load } = require("cheerio");
+
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
 
 const headers = {
-  "user-agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+  "user-agent": UA,
   accept: "*/*",
   "accept-encoding": "gzip, deflate, br",
   "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
 };
-let cookie;
+
+let cookie: { b_3: string; b_4: string } | null = null;
+
+async function getCookie() {
+  if (!cookie) {
+    cookie = (
+      await axios.get("https://api.bilibili.com/x/frontend/finger/spi", {
+        headers: { "User-Agent": UA },
+      })
+    ).data.data;
+  }
+  return cookie;
+}
+
+function getCookieString() {
+  if (!cookie) return "";
+  return `buvid3=${cookie.b_3};buvid4=${cookie.b_4}`;
+}
 
 /** 获取cid */
 async function getCid(bvid, aid) {
-  const params = bvid
-    ? {
-      bvid: bvid,
-    }
-    : {
-      aid: aid,
-    };
+  const params = bvid ? { bvid } : { aid };
   const cidRes = (
-    await axios.get("https://api.bilibili.com/x/web-interface/view?%s", {
-      headers: headers,
-      params: params,
+    await axios.get("https://api.bilibili.com/x/web-interface/view", {
+      headers,
+      params,
     })
   ).data;
   return cidRes;
 }
 
-/** 格式化 */
+/** 格式化时长 */
 function durationToSec(duration: string | number) {
   if (typeof duration === "number") {
     return duration;
   }
-
   if (typeof duration === "string") {
-    var dur = duration.split(":");
+    const dur = duration.split(":");
     return dur.reduce(function (prev, curr) {
       return 60 * prev + +curr;
     }, 0);
   }
-
   return 0;
 }
 
 const searchHeaders = {
-  "user-agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+  "user-agent": UA,
   accept: "application/json, text/plain, */*",
   "accept-encoding": "gzip, deflate, br",
   origin: "https://search.bilibili.com",
@@ -59,28 +69,17 @@ const searchHeaders = {
   referer: "https://search.bilibili.com/",
   "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
 };
-async function getCookie() {
-  if (!cookie) {
-    cookie = (
-      await axios.get("https://api.bilibili.com/x/frontend/finger/spi", {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/114.0.0.0",
-        },
-      })
-    ).data.data;
-  }
-}
 const pageSize = 20;
+
 /** 搜索 */
 async function searchBase(keyword: string, page: number, searchType) {
   await getCookie();
   const params = {
     context: "",
-    page: page,
+    page,
     order: "",
     page_size: pageSize,
-    keyword: keyword,
+    keyword,
     duration: "",
     tids_1: "",
     tids_2: "",
@@ -97,9 +96,9 @@ async function searchBase(keyword: string, page: number, searchType) {
     await axios.get("https://api.bilibili.com/x/web-interface/search/type", {
       headers: {
         ...searchHeaders,
-        cookie: `buvid3=${cookie.b_3};buvid4=${cookie.b_4}`,
+        cookie: getCookieString(),
       },
-      params: params,
+      params,
     })
   ).data;
   return res.data;
@@ -286,8 +285,7 @@ async function getWWebId(id: string) {
   }
   const html = (await axios.get("https://space.bilibili.com/" + id, {
     headers: {
-      "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+      "user-agent": UA,
     }
   })).data
 
@@ -302,8 +300,7 @@ async function getWWebId(id: string) {
 
 async function getArtistWorks(artistItem, page, type) {
   const queryHeaders = {
-    "user-agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.63",
+    "user-agent": UA,
     accept: "*/*",
     "accept-encoding": "gzip, deflate, br, zstd",
     origin: "https://space.bilibili.com",
@@ -339,7 +336,7 @@ async function getArtistWorks(artistItem, page, type) {
     await axios.get("https://api.bilibili.com/x/space/wbi/arc/search", {
       headers: {
         ...queryHeaders,
-        cookie: `buvid3=${cookie.b_3};buvid4=${cookie.b_4}`,
+        cookie: getCookieString(),
       },
       params: {
         ...params,
@@ -347,7 +344,6 @@ async function getArtistWorks(artistItem, page, type) {
       },
     })
   ).data;
-  console.log(res);
 
   const resultData = res.data;
   const albums = resultData.list.vlist.map(formatMedia);
@@ -388,19 +384,23 @@ async function getMediaSource(
   if (res.data.dash) {
     const audios = res.data.dash.audio;
     audios.sort((a, b) => a.bandwidth - b.bandwidth);
+    const len = audios.length;
     switch (quality) {
       case "low":
-        url = audios[0].baseUrl;
+        url = audios[0]?.baseUrl;
         break;
       case "standard":
-        url = audios[1].baseUrl;
+        url = audios[Math.min(1, len - 1)]?.baseUrl;
         break;
       case "high":
-        url = audios[2].baseUrl;
+        url = audios[Math.min(2, len - 1)]?.baseUrl;
         break;
       case "super":
-        url = audios[3].baseUrl;
+        url = audios[len - 1]?.baseUrl;
         break;
+    }
+    if (!url) {
+      url = audios[len - 1]?.baseUrl;
     }
   } else {
     url = res.data.durl[0].url;
@@ -427,6 +427,8 @@ async function getMediaSource(
 }
 
 async function getTopLists() {
+  await getCookie();
+
   // 入站必刷
   const precious = {
     title: "入站必刷",
@@ -450,8 +452,8 @@ async function getTopLists() {
     "https://api.bilibili.com/x/web-interface/popular/series/list",
     {
       headers: {
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        ...headers,
+        cookie: getCookieString(),
       },
     }
   );
@@ -556,18 +558,20 @@ async function getTopLists() {
 }
 
 async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
+  await getCookie();
   const res = await axios.get(
     `https://api.bilibili.com/x/web-interface/${topListItem.id}`,
     {
       headers: {
         ...headers,
         referer: "https://www.bilibili.com/",
+        cookie: getCookieString(),
       },
     }
   );
   return {
     ...topListItem,
-    musicList: res.data.data.list.map(formatMedia),
+    musicList: (res.data.data?.list || []).map(formatMedia),
   };
 }
 
@@ -655,7 +659,7 @@ async function getMusicComments(musicItem) {
 module.exports = {
   platform: "bilibili",
   appVersion: ">=0.0",
-  version: "0.2.3",
+  version: "0.3.0",
   author: "猫头猫",
   cacheControl: "no-cache",
   srcUrl:
