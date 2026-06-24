@@ -58,6 +58,12 @@ async function getCookie() {
         })).data.data;
     }
 }
+function getCookieString() {
+    if (!cookie) {
+        return "";
+    }
+    return `buvid3=${cookie.b_3};buvid4=${cookie.b_4}`;
+}
 const pageSize = 20;
 async function searchBase(keyword, page, searchType) {
     await getCookie();
@@ -101,6 +107,140 @@ async function getFavoriteList(id) {
             });
             result.push(...medias);
             if (!has_more) {
+                break;
+            }
+            page += 1;
+        }
+        catch (error) {
+            console.warn(error);
+            break;
+        }
+    }
+    return result;
+}
+async function getSeasonArchiveList(mid, seasonId) {
+    var _a, _b;
+    const result = [];
+    const pageSize = 30;
+    let page = 1;
+    while (true) {
+        try {
+            await getCookie();
+            const params = {
+                mid,
+                season_id: seasonId,
+                sort_reverse: false,
+                page_num: page,
+                page_size: pageSize,
+                web_location: 333.999,
+                wts: Math.round(Date.now() / 1e3).toString(),
+            };
+            const w_rid = await getRid(params);
+            const res = (await axios_1.default.get("https://api.bilibili.com/x/polymer/web-space/seasons_archives_list", {
+                headers: Object.assign(Object.assign({}, headers), { origin: "https://space.bilibili.com", referer: `https://space.bilibili.com/${mid}/lists/${seasonId}`, cookie: getCookieString() }),
+                params: Object.assign(Object.assign({}, params), { w_rid }),
+            })).data;
+            const data = res.data || {};
+            const archives = data.archives || [];
+            result.push(...archives);
+            const total = Number(((_a = data.page) === null || _a === void 0 ? void 0 : _a.total) || ((_b = data.meta) === null || _b === void 0 ? void 0 : _b.total) || result.length);
+            if (!archives.length || result.length >= total) {
+                break;
+            }
+            page += 1;
+        }
+        catch (error) {
+            console.warn(error);
+            break;
+        }
+    }
+    return result;
+}
+async function getSpaceListArchiveList(mid, listId) {
+    var _a, _b, _c;
+    const result = [];
+    const pageSize = 20;
+    let page = 1;
+    while (true) {
+        try {
+            await getCookie();
+            const res = (await axios_1.default.get("https://api.bilibili.com/x/polymer/web-space/home/seasons_series", {
+                headers: Object.assign(Object.assign({}, headers), { origin: "https://space.bilibili.com", referer: `https://space.bilibili.com/${mid}/lists/${listId}`, cookie: getCookieString() }),
+                params: {
+                    mid,
+                    page_num: page,
+                    page_size: pageSize,
+                },
+            })).data;
+            const items = [
+                ...(((_a = (res.data || {}).items_lists) === null || _a === void 0 ? void 0 : _a.seasons_list) || []),
+                ...(((_b = (res.data || {}).items_lists) === null || _b === void 0 ? void 0 : _b.series_list) || []),
+            ];
+            for (const item of items) {
+                const meta = item.meta || {};
+                const id = meta.season_id || meta.series_id || item.season_id || item.series_id;
+                if (String(id) === String(listId)) {
+                    if (meta.season_id) {
+                        const fullArchives = await getSeasonArchiveList(mid, listId);
+                        return fullArchives.length ? fullArchives : item.archives || [];
+                    }
+                    result.push(...(item.archives || []));
+                    return result;
+                }
+            }
+            const paging = ((_c = (res.data || {}).items_lists) === null || _c === void 0 ? void 0 : _c.page) || {};
+            const total = Number(paging.total || items.length);
+            if (!items.length || page * pageSize >= total) {
+                break;
+            }
+            page += 1;
+        }
+        catch (error) {
+            console.warn(error);
+            break;
+        }
+    }
+    return result;
+}
+async function getSpaceAllListArchiveItems(mid) {
+    var _a, _b, _c;
+    const result = [];
+    const pageSize = 20;
+    let page = 1;
+    const seenIds = new Set();
+    while (true) {
+        try {
+            await getCookie();
+            const res = (await axios_1.default.get("https://api.bilibili.com/x/polymer/web-space/home/seasons_series", {
+                headers: Object.assign(Object.assign({}, headers), { origin: "https://space.bilibili.com", referer: `https://space.bilibili.com/${mid}/lists`, cookie: getCookieString() }),
+                params: {
+                    mid,
+                    page_num: page,
+                    page_size: pageSize,
+                },
+            })).data;
+            const items = [
+                ...(((_a = (res.data || {}).items_lists) === null || _a === void 0 ? void 0 : _a.seasons_list) || []),
+                ...(((_b = (res.data || {}).items_lists) === null || _b === void 0 ? void 0 : _b.series_list) || []),
+            ];
+            for (const item of items) {
+                const meta = item.meta || {};
+                const id = meta.season_id || meta.series_id || item.season_id || item.series_id;
+                if (!id || seenIds.has(String(id))) {
+                    continue;
+                }
+                seenIds.add(String(id));
+                const listTitle = meta.title || meta.name || item.title || item.name || String(id);
+                const archives = meta.season_id
+                    ? await getSeasonArchiveList(mid, id)
+                    : item.archives || [];
+                for (const archive of archives) {
+                    result.push(Object.assign(Object.assign({}, archive), { listTitle }));
+                }
+            }
+            const paging = ((_c = (res.data || {}).items_lists) === null || _c === void 0 ? void 0 : _c.page) || {};
+            const total = Number(paging.total || items.length);
+            if (!items.length || page * pageSize >= total || items.length < pageSize) {
                 break;
             }
             page += 1;
@@ -467,7 +607,19 @@ async function getTopListDetail(topListItem) {
     return Object.assign(Object.assign({}, topListItem), { musicList: res.data.data.list.map(formatMedia) });
 }
 async function importMusicSheet(urlLike) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
+    const spaceAllLists = urlLike.match(/space\.bilibili\.com\/(\d+)\/lists\/?$/i);
+    if (spaceAllLists) {
+        return (await getSpaceAllListArchiveItems(spaceAllLists[1])).map((_) => {
+            const item = formatMedia(_);
+            item.album = _.listTitle || item.album;
+            return item;
+        });
+    }
+    const spaceList = urlLike.match(/space\.bilibili\.com\/(\d+)\/lists\/(\d+)/i);
+    if (spaceList) {
+        return (await getSpaceListArchiveList(spaceList[1], spaceList[2])).map(formatMedia);
+    }
     let id;
     if (!id) {
         id = (_a = urlLike.match(/^\s*(\d+)\s*$/)) === null || _a === void 0 ? void 0 : _a[1];
@@ -480,6 +632,9 @@ async function importMusicSheet(urlLike) {
     }
     if (!id) {
         id = (_d = urlLike.match(/\/list\/ml(\d+)/i)) === null || _d === void 0 ? void 0 : _d[1];
+    }
+    if (!id) {
+        id = (_e = urlLike.match(/\/lists\/(\d+)/i)) === null || _e === void 0 ? void 0 : _e[1];
     }
     if (!id) {
         return;
