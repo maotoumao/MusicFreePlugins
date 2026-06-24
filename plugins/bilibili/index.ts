@@ -71,6 +71,13 @@ async function getCookie() {
     ).data.data;
   }
 }
+
+function getCookieString() {
+  if (!cookie) {
+    return "";
+  }
+  return `buvid3=${cookie.b_3};buvid4=${cookie.b_4}`;
+}
 const pageSize = 20;
 /** 搜索 */
 async function searchBase(keyword: string, page: number, searchType) {
@@ -128,6 +135,187 @@ async function getFavoriteList(id: number | string) {
       result.push(...medias);
 
       if (!has_more) {
+        break;
+      }
+      page += 1;
+    } catch (error) {
+      console.warn(error);
+      break;
+    }
+  }
+
+  return result;
+}
+
+async function getSeasonArchiveList(mid: string, seasonId: string | number) {
+  const result = [];
+  const pageSize = 30;
+  let page = 1;
+
+  while (true) {
+    try {
+      await getCookie();
+      const params = {
+        mid,
+        season_id: seasonId,
+        sort_reverse: false,
+        page_num: page,
+        page_size: pageSize,
+        web_location: 333.999,
+        wts: Math.round(Date.now() / 1e3).toString(),
+      };
+      const w_rid = await getRid(params);
+      const res = (
+        await axios.get(
+          "https://api.bilibili.com/x/polymer/web-space/seasons_archives_list",
+          {
+            headers: {
+              ...headers,
+              origin: "https://space.bilibili.com",
+              referer: `https://space.bilibili.com/${mid}/lists/${seasonId}`,
+              cookie: getCookieString(),
+            },
+            params: {
+              ...params,
+              w_rid,
+            },
+          }
+        )
+      ).data;
+      const data = res.data || {};
+      const archives = data.archives || [];
+      result.push(...archives);
+
+      const total = Number(data.page?.total || data.meta?.total || result.length);
+      if (!archives.length || result.length >= total) {
+        break;
+      }
+      page += 1;
+    } catch (error) {
+      console.warn(error);
+      break;
+    }
+  }
+
+  return result;
+}
+
+async function getSpaceListArchiveList(mid: string, listId: string | number) {
+  const result = [];
+  const pageSize = 20;
+  let page = 1;
+
+  while (true) {
+    try {
+      await getCookie();
+      const res = (
+        await axios.get(
+          "https://api.bilibili.com/x/polymer/web-space/home/seasons_series",
+          {
+            headers: {
+              ...headers,
+              origin: "https://space.bilibili.com",
+              referer: `https://space.bilibili.com/${mid}/lists/${listId}`,
+              cookie: getCookieString(),
+            },
+            params: {
+              mid,
+              page_num: page,
+              page_size: pageSize,
+            },
+          }
+        )
+      ).data;
+      const items = [
+        ...((res.data || {}).items_lists?.seasons_list || []),
+        ...((res.data || {}).items_lists?.series_list || []),
+      ];
+
+      for (const item of items) {
+        const meta = item.meta || {};
+        const id =
+          meta.season_id || meta.series_id || item.season_id || item.series_id;
+        if (String(id) === String(listId)) {
+          if (meta.season_id) {
+            const fullArchives = await getSeasonArchiveList(mid, listId);
+            return fullArchives.length ? fullArchives : item.archives || [];
+          }
+          result.push(...(item.archives || []));
+          return result;
+        }
+      }
+
+      const paging = (res.data || {}).items_lists?.page || {};
+      const total = Number(paging.total || items.length);
+      if (!items.length || page * pageSize >= total) {
+        break;
+      }
+      page += 1;
+    } catch (error) {
+      console.warn(error);
+      break;
+    }
+  }
+
+  return result;
+}
+
+async function getSpaceAllListArchiveItems(mid: string) {
+  const result = [];
+  const pageSize = 20;
+  let page = 1;
+  const seenIds = new Set<string>();
+
+  while (true) {
+    try {
+      await getCookie();
+      const res = (
+        await axios.get(
+          "https://api.bilibili.com/x/polymer/web-space/home/seasons_series",
+          {
+            headers: {
+              ...headers,
+              origin: "https://space.bilibili.com",
+              referer: `https://space.bilibili.com/${mid}/lists`,
+              cookie: getCookieString(),
+            },
+            params: {
+              mid,
+              page_num: page,
+              page_size: pageSize,
+            },
+          }
+        )
+      ).data;
+      const items = [
+        ...((res.data || {}).items_lists?.seasons_list || []),
+        ...((res.data || {}).items_lists?.series_list || []),
+      ];
+
+      for (const item of items) {
+        const meta = item.meta || {};
+        const id =
+          meta.season_id || meta.series_id || item.season_id || item.series_id;
+        if (!id || seenIds.has(String(id))) {
+          continue;
+        }
+        seenIds.add(String(id));
+        const listTitle =
+          meta.title || meta.name || item.title || item.name || String(id);
+        const archives = meta.season_id
+          ? await getSeasonArchiveList(mid, id)
+          : item.archives || [];
+        for (const archive of archives) {
+          result.push({
+            ...archive,
+            listTitle,
+          });
+        }
+      }
+
+      const paging = (res.data || {}).items_lists?.page || {};
+      const total = Number(paging.total || items.length);
+      if (!items.length || page * pageSize >= total || items.length < pageSize) {
         break;
       }
       page += 1;
@@ -572,6 +760,20 @@ async function getTopListDetail(topListItem: IMusicSheet.IMusicSheetItem) {
 }
 
 async function importMusicSheet(urlLike: string) {
+  const spaceAllLists = urlLike.match(/space\.bilibili\.com\/(\d+)\/lists\/?$/i);
+  if (spaceAllLists) {
+    return (await getSpaceAllListArchiveItems(spaceAllLists[1])).map((_) => {
+      const item = formatMedia(_);
+      item.album = _.listTitle || item.album;
+      return item;
+    });
+  }
+
+  const spaceList = urlLike.match(/space\.bilibili\.com\/(\d+)\/lists\/(\d+)/i);
+  if (spaceList) {
+    return (await getSpaceListArchiveList(spaceList[1], spaceList[2])).map(formatMedia);
+  }
+
   let id: string;
   if (!id) {
     id = urlLike.match(/^\s*(\d+)\s*$/)?.[1];
@@ -584,6 +786,9 @@ async function importMusicSheet(urlLike: string) {
   }
   if (!id) {
     id = urlLike.match(/\/list\/ml(\d+)/i)?.[1];
+  }
+  if (!id) {
+    id = urlLike.match(/\/lists\/(\d+)/i)?.[1];
   }
   if (!id) {
     return;
