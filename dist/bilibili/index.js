@@ -541,6 +541,53 @@ async function getMusicComments(musicItem) {
         data: comments
     };
 }
+// 获取歌曲详情（补全播放量、简介、UP主等信息）
+// 多P视频时，用 cid 找对应分P标题，不返回合集标题
+async function getMusicInfo(musicItem) {
+    const bvid = musicItem.bvid;
+    const aid = musicItem.aid;
+    const cid = musicItem.cid;
+    if (!bvid && !aid) return {};
+    try {
+        const cidRes = await getCid(bvid, aid);
+        const d = cidRes === null || cidRes === void 0 ? void 0 : cidRes.data;
+        if (!d) return {};
+        const result = {};
+        if (d.cid) result.cid = d.cid;
+        if (d.duration) result.duration = d.duration;
+        // 标题：多P视频用 cid 对应的分P标题(part)，不用合集标题
+        const pages = d.pages || [];
+        if (cid && pages.length > 1) {
+            const page = pages.find(function (_) { return String(_.cid) === String(cid); });
+            if (page && page.part) {
+                result.title = page.part;
+            } else {
+                result.title = d.title;
+            }
+        } else if (pages.length === 1 && pages[0].part) {
+            result.title = pages[0].part;
+        } else {
+            result.title = d.title;
+        }
+        if (d.pic) {
+            result.artwork = d.pic.startsWith("//") ? "https:" + d.pic : d.pic;
+        }
+        if (d.owner && d.owner.name) result.artist = d.owner.name;
+        if (d.desc && d.desc.trim()) result.desc = d.desc.trim();
+        const stat = d.stat || {};
+        if (stat.view != null) result.playCount = stat.view;
+        if (stat.like != null) result.likeCount = stat.like;
+        if (stat.coin != null) result.coinCount = stat.coin;
+        if (stat.favorite != null) result.favoriteCount = stat.favorite;
+        if (stat.danmaku != null) result.danmakuCount = stat.danmaku;
+        if (stat.reply != null) result.replyCount = stat.reply;
+        if (d.pubdate) result.date = dayjs.unix(d.pubdate).format("YYYY-MM-DD");
+        return result;
+    } catch (error) {
+        console.error("获取歌曲详情失败:", error.message);
+        return {};
+    }
+}
 module.exports = {
     platform: "bilibili",
     appVersion: ">=0.0",
@@ -590,5 +637,6 @@ module.exports = {
     getTopLists,
     getTopListDetail,
     importMusicSheet,
-    getMusicComments
+    getMusicComments,
+    getMusicInfo
 };
